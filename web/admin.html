@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>电商小二 · 运营看板</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
+<style>
+  :root{
+    --bg:#000000; --surface:rgba(255,255,255,.06); --surface-2:rgba(118,118,128,.16);
+    --hairline:rgba(255,255,255,.12); --txt:#f5f5f7; --sub:#a1a1a6; --muted:#6e6e73;
+    --grad:linear-gradient(135deg,#0a84ff 0%,#5e5ce6 36%,#bf5af2 70%,#ff375f 100%);
+    --ok:#30d158; --err:#ff453a; --acc:#0a84ff;
+    --font:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","PingFang SC","Microsoft YaHei",sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{font-family:var(--font);color:var(--txt);background:var(--bg);margin:0;min-height:100vh;
+    -webkit-font-smoothing:antialiased;padding:34px 30px 60px}
+  ::selection{background:rgba(94,92,230,.4)}
+  .wrap{max-width:960px;margin:0 auto}
+  .top{display:flex;align-items:center;gap:13px;margin-bottom:24px}
+  .top .logo{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:rgba(255,255,255,.92);font-size:21px}
+  .top .name{font-size:20px;font-weight:700}
+  .top .sp{flex:1}
+  .back{color:var(--sub);text-decoration:none;font-size:13px;border:1px solid var(--hairline);padding:8px 15px;border-radius:999px}
+  .back:hover{color:#fff}
+  h1{font-size:clamp(24px,3vw,34px);font-weight:800;margin:0 0 6px}
+  h1 .g{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+  h2{font-size:16px;font-weight:700;margin:0 0 14px}
+  .lead{color:var(--sub);font-size:13.5px;margin:0 0 26px}
+  .kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:26px}
+  @media (max-width:900px){.kpis{grid-template-columns:repeat(3,1fr)}}
+  @media (max-width:640px){.kpis{grid-template-columns:repeat(2,1fr)}}
+  /* 管理员登录门 */
+  #gate{position:fixed;inset:0;z-index:99;display:none;place-items:center;background:rgba(0,0,0,.78);backdrop-filter:blur(8px)}
+  #gate.show{display:grid}
+  .gatebox{width:min(360px,90vw);background:var(--surface);border:1px solid var(--hairline);border-radius:20px;
+    padding:30px 28px;backdrop-filter:blur(24px);text-align:center}
+  .gatebox .big{font-size:38px;margin-bottom:10px}
+  .gatebox .t{font-size:17px;font-weight:700;margin-bottom:6px}
+  .gatebox .d{font-size:12.5px;color:var(--sub);margin-bottom:18px;line-height:1.7}
+  .gatebox input{width:100%;background:var(--surface-2);border:1px solid transparent;border-radius:11px;
+    color:var(--txt);font-size:14px;padding:12px 14px;outline:none;font-family:inherit;text-align:center;letter-spacing:2px}
+  .gatebox input:focus{border-color:var(--acc)}
+  .gatebox button{width:100%;margin-top:12px;border:0;border-radius:11px;padding:12px;font-size:14px;font-weight:700;
+    cursor:pointer;background:var(--grad);color:#fff;font-family:inherit}
+  .gatebox .gerr{color:#ff7b72;font-size:12px;margin-top:9px;min-height:16px}
+  .kpi{background:var(--surface);border:1px solid var(--hairline);border-radius:18px;padding:20px 18px;backdrop-filter:blur(20px)}
+  .kpi .v{font-size:30px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums;
+    background:linear-gradient(180deg,#fff,rgba(255,255,255,.6));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .kpi .k{font-size:12px;color:var(--sub);margin-top:5px}
+  .kpi.bad .v{background:linear-gradient(180deg,#ff7b72,rgba(255,69,58,.6));-webkit-background-clip:text;background-clip:text}
+  .card{background:var(--surface);border:1px solid var(--hairline);border-radius:18px;padding:20px 22px;margin-bottom:18px;backdrop-filter:blur(20px)}
+  .card .ct{font-size:12px;color:var(--muted);letter-spacing:.14em;margin-bottom:14px}
+  .hot{display:flex;flex-direction:column;gap:9px}
+  .hot .row{display:flex;align-items:center;gap:12px;font-size:13.5px}
+  .hot .q{color:var(--txt)}
+  .hot .n{margin-left:auto;font-size:12px;color:var(--acc);border:1px solid rgba(10,132,255,.4);border-radius:999px;padding:2px 10px;white-space:nowrap}
+  .empty{color:var(--muted);font-size:13px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{color:var(--muted);text-align:left;font-weight:500;font-size:12px;padding:8px 10px;border-bottom:1px solid var(--hairline)}
+  td{padding:9px 10px;border-bottom:1px solid rgba(255,255,255,.06);color:var(--sub);vertical-align:top}
+  td .tag{border-radius:999px;padding:2px 10px;font-size:11.5px;white-space:nowrap}
+  td .tag.up{background:rgba(48,209,88,.15);color:var(--ok)}
+  td .tag.down{background:rgba(255,69,58,.15);color:var(--err)}
+  td .tag.pend{background:rgba(255,214,10,.15);color:#ffd60a}
+  td .tag.done{background:rgba(48,209,88,.15);color:var(--ok)}
+  td .tag.miss{background:rgba(191,90,242,.18);color:#bf5af2}
+  .rowbtn{border:1px solid var(--hairline);background:var(--surface-2);color:var(--sub);border-radius:8px;
+    padding:4px 9px;font-size:11.5px;cursor:pointer;font-family:inherit;margin:2px 4px 2px 0;transition:.2s}
+  .rowbtn:hover{color:#fff;border-color:var(--acc)}
+  .rowbtn.danger:hover{border-color:var(--err);color:#ff7b72}
+  .refresh{border:0;border-radius:11px;padding:10px 18px;font-size:13px;font-weight:700;cursor:pointer;
+    background:var(--grad);color:#fff;font-family:inherit}
+  /* FAQ 表单 */
+  .faqform{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+  @media (max-width:700px){.faqform{grid-template-columns:1fr}}
+  .faqform input,.faqform textarea{width:100%;background:var(--surface-2);border:1px solid transparent;border-radius:10px;
+    color:var(--txt);font-size:13px;padding:10px 12px;outline:none;font-family:inherit;transition:.2s}
+  .faqform input:focus,.faqform textarea:focus{border-color:var(--acc)}
+  .faqform textarea{grid-column:1/-1;min-height:70px;resize:vertical}
+  .faqform .frow{display:flex;gap:10px;grid-column:1/-1;align-items:center}
+  .faqform .save{border:0;border-radius:10px;padding:10px 22px;font-size:13px;font-weight:700;cursor:pointer;
+    background:var(--grad);color:#fff;font-family:inherit}
+  .faqform .cancel{border:1px solid var(--hairline);border-radius:10px;padding:10px 16px;font-size:13px;cursor:pointer;
+    background:transparent;color:var(--sub);font-family:inherit}
+  .chk{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--sub);cursor:pointer}
+  .editmode{border:1px solid rgba(10,132,255,.45);background:rgba(10,132,255,.08);border-radius:14px;padding:14px}
+  .editmode .mode{font-size:11.5px;color:var(--acc);margin-bottom:10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="logo">📊</div>
+    <div class="name">电商小二 · 运营看板</div>
+    <div class="sp"></div>
+    <button class="refresh" onclick="loadAll()">↻ 刷新</button>
+    <a class="back" href="/">← 返回客服</a>
+  </div>
+  <h1>客服运营 <span class="g">数据一览</span></h1>
+  <p class="lead">评价数据实时来自用户在对话中的 👍/👎 反馈；点踩的坏例进入复核队列，FAQ 知识库可直接在线维护。</p>
+
+  <div class="kpis">
+    <div class="kpi"><div class="v" id="kTotal">–</div><div class="k">累计评价</div></div>
+    <div class="kpi"><div class="v" id="kUp">–</div><div class="k">👍 好评</div></div>
+    <div class="kpi"><div class="v" id="kDown">–</div><div class="k">👎 点踩</div></div>
+    <div class="kpi bad"><div class="v" id="kRate">–</div><div class="k">点踩率</div></div>
+    <div class="kpi"><div class="v" id="kLat">–</div><div class="k">平均响应</div></div>
+  </div>
+
+  <div class="card">
+    <div class="ct">评价趋势（按天）</div>
+    <canvas id="trend" height="110"></canvas>
+  </div>
+
+  <div class="card">
+    <div class="ct">用户问题词云（Top 30，一眼看清用户都在问什么）</div>
+    <div id="wc" style="height:260px"></div>
+  </div>
+
+  <div class="card">
+    <div class="ct">LLM 调用追踪（mini-Langfuse）</div>
+    <div class="kpis" style="margin-bottom:14px;grid-template-columns:repeat(3,1fr)">
+      <div class="kpi" style="padding:14px"><div class="v" id="kLlmTotal" style="font-size:22px">–</div><div class="k">总调用次数</div></div>
+      <div class="kpi bad" style="padding:14px"><div class="v" id="kLlmFail" style="font-size:22px">–</div><div class="k">失败次数</div></div>
+      <div class="kpi" style="padding:14px"><div class="v" id="kLlmLat" style="font-size:22px">–</div><div class="k">平均耗时</div></div>
+    </div>
+    <table style="margin-bottom:14px">
+      <thead><tr><th>链路（track）</th><th>调用次数</th><th>平均耗时</th></tr></thead>
+      <tbody id="llmByTrack"></tbody>
+    </table>
+    <div class="ct" style="margin-bottom:8px">最近调用（15 条）</div>
+    <table>
+      <thead><tr><th>时间</th><th>链路</th><th>模型</th><th>耗时</th><th>Prompt 字符</th><th>结果</th></tr></thead>
+      <tbody id="llmRecent"></tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="ct">🆕 扩展运营台（知识库上传 / FAQ 批量 / 转人工接管 / 满意度）</div>
+
+    <!-- 转人工实时提醒 -->
+    <div id="transferAlert" style="display:none;border:1.5px solid #ff453a;background:rgba(255,69,58,.10);
+      border-radius:12px;padding:12px 14px;margin-bottom:14px">
+      <div style="font-weight:800;color:#ff7b72;margin-bottom:8px">🚨 用户请求转人工！</div>
+      <div id="transferInfo" style="font-size:13px;color:var(--sub);margin-bottom:8px"></div>
+      <div style="display:flex;gap:8px">
+        <input id="agentText" placeholder="以人工客服身份回复…" style="flex:1;border:1px solid var(--hairline);
+          border-radius:10px;padding:10px 12px;background:var(--surface-2);color:var(--txt);font-family:inherit" />
+        <button id="agentSend" style="border:0;border-radius:10px;padding:10px 18px;font-weight:700;cursor:pointer;
+          background:var(--grad);color:#fff;font-family:inherit">发送</button>
+        <button id="agentSkip" style="border:1px solid var(--hairline);border-radius:10px;padding:10px 14px;
+          background:var(--surface-2);color:var(--txt);cursor:pointer;font-family:inherit">忽略</button>
+      </div>
+    </div>
+
+    <!-- 满意度 -->
+    <div class="kpis" style="margin-bottom:14px;grid-template-columns:repeat(3,1fr)">
+      <div class="kpi" style="padding:14px"><div class="v" id="kStars" style="font-size:22px">–</div><div class="k">平均星级</div></div>
+      <div class="kpi" style="padding:14px"><div class="v" id="kNps" style="font-size:22px">–</div><div class="k">NPS（推荐者-贬损者）</div></div>
+      <div class="kpi" style="padding:14px"><div class="v" id="kStarCnt" style="font-size:22px">–</div><div class="k">评价次数</div></div>
+    </div>
+    <div id="starDist" style="font-size:12.5px;color:var(--sub);margin-bottom:14px"></div>
+
+    <!-- 知识库上传 -->
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
+      <input type="file" id="kbFile" accept=".txt,.md,.markdown"
+        style="font-size:12.5px;color:var(--sub)" />
+      <button id="kbUpload" style="border:0;border-radius:10px;padding:9px 16px;font-weight:700;cursor:pointer;
+        background:var(--grad);color:#fff;font-family:inherit">📤 上传知识库文档</button>
+      <button id="faqExport" style="border:1px solid var(--hairline);border-radius:10px;padding:9px 14px;
+        background:var(--surface-2);color:var(--txt);cursor:pointer;font-family:inherit">⬇ 导出 FAQ</button>
+      <input type="file" id="faqImportFile" accept=".csv" style="display:none" />
+      <button id="faqImport" style="border:1px solid var(--hairline);border-radius:10px;padding:9px 14px;
+        background:var(--surface-2);color:var(--txt);cursor:pointer;font-family:inherit">⬆ 导入 FAQ</button>
+      <span style="flex:1"></span>
+      <span style="font-size:12px;color:var(--muted)">知识库总量：<b id="kbTotal">–</b> 块</span>
+    </div>
+    <div id="kbList" style="font-size:12.5px;color:var(--sub);line-height:1.9"></div>
+    <div id="kbMsg" style="font-size:12.5px;color:#30d158;margin-top:6px"></div>
+  </div>
+
+  <div class="card">
+    <div class="ct">坏例复核队列 <span id="pendCnt" style="color:#ffd60a"></span></div>
+    <table>
+      <thead><tr><th>时间</th><th>用户问题</th><th>机器人回答</th><th>点踩原因</th><th>状态</th><th>操作</th></tr></thead>
+      <tbody id="review"></tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="ct">FAQ 知识库管理（改完即时生效，无需重启）</div>
+    <div class="editmode" id="faqFormBox">
+      <div class="mode" id="faqMode">➕ 新增 FAQ</div>
+      <div class="faqform">
+        <input id="fTitle" placeholder="标题（如：发货时效）" />
+        <input id="fKeywords" placeholder="命中关键词，逗号分隔（如：发货,几天,多久）" />
+        <textarea id="fAnswer" placeholder="标准答案…"></textarea>
+        <div class="frow">
+          <label class="chk"><input type="checkbox" id="fEnabled" checked /> 启用</label>
+          <span style="flex:1"></span>
+          <button class="cancel" id="fCancel" style="display:none">取消编辑</button>
+          <button class="save" id="fSave">保存</button>
+        </div>
+      </div>
+    </div>
+    <table style="margin-top:14px">
+      <thead><tr><th>标题</th><th>关键词</th><th>答案摘要</th><th>状态</th><th>操作</th></tr></thead>
+      <tbody id="faqTable"></tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="ct">热门问题 TOP 8</div>
+    <div class="hot" id="hot"><div class="empty">暂无数据，去对话里问几句吧～</div></div>
+  </div>
+
+  <div class="card">
+    <div class="ct">最近评价</div>
+    <table>
+      <thead><tr><th>时间</th><th>用户</th><th>问题</th><th>评价</th></tr></thead>
+      <tbody id="recent"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- 管理员登录门 -->
+<div id="gate">
+  <div class="gatebox">
+    <div class="big">🔐</div>
+    <div class="t">管理员登录</div>
+    <div class="d">看板的写操作（FAQ 编辑 / 坏例复核）需要管理员密码<br/>演示环境不发真实密钥，密码直接显示在下方提示框</div>
+    <input type="password" id="gatePwd" placeholder="输入管理员密码" />
+    <div id="gateHint" style="display:none;font-size:12px;color:#8f6b1f;background:rgba(201,162,75,.10);
+      border:1px solid rgba(166,124,30,.30);border-radius:10px;padding:9px 12px;margin-top:10px;line-height:1.6"></div>
+    <button id="gateBtn">进入管理后台</button>
+    <div class="gerr" id="gateErr"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/echarts-wordcloud@2.1.0/dist/echarts-wordcloud.min.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;');
+let trendChart = null, faqCache = [], editingId = null;
+
+/* ---------- 管理员鉴权 ---------- */
+let ADMIN_TOKEN = sessionStorage.getItem('admin_token') || '';
+function needGate(){ $('gate').classList.add('show'); $('gatePwd').focus(); }
+async function adminFetch(url, opts={}){
+  opts.headers = Object.assign({'Content-Type':'application/json','X-Admin-Token':ADMIN_TOKEN}, opts.headers||{});
+  const r = await fetch(url, opts);
+  if(r.status===401){ sessionStorage.removeItem('admin_token'); ADMIN_TOKEN=''; needGate(); throw new Error('需要管理员身份'); }
+  return r;
+}
+$('gateBtn').onclick = async ()=>{
+  try{
+    const r = await fetch('/api/admin/login',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({password:$('gatePwd').value})});
+    const d = await r.json();
+    if(!r.ok) throw new Error(d.detail||'密码错误');
+    ADMIN_TOKEN = d.token;
+    sessionStorage.setItem('admin_token', ADMIN_TOKEN);
+    $('gate').classList.remove('show');
+    $('gateErr').textContent='';
+    loadAll();
+  }catch(e){ $('gateErr').textContent = e.message; }
+};
+$('gatePwd').addEventListener('keydown',e=>{ if(e.key==='Enter') $('gateBtn').click(); });
+if(!ADMIN_TOKEN) needGate();
+
+/* ---------- 演示模式：拉取演示密码并自动填入（同登录页演示验证码套路） ---------- */
+(async ()=>{
+  try{
+    const r = await fetch('/api/admin/demo');
+    const d = await r.json();
+    if(d.ok && d.demo_password){
+      $('gatePwd').value = d.demo_password;
+      const h = $('gateHint');
+      h.innerHTML = '📬 演示密码：<b style="font-size:15px;letter-spacing:2px">'+esc(d.demo_password)+'</b>（已自动填入，直接点「进入管理后台」）';
+      h.style.display='block';
+    }
+  }catch(e){ /* 接口不可用时保持手动输入 */ }
+})();
+
+async function loadAll(){
+  try{
+    const d = await (await fetch('/api/stats')).json();
+    $('kTotal').textContent = d.total_feedback;
+    $('kUp').textContent = d.up;
+    $('kDown').textContent = d.down;
+    $('kRate').textContent = (d.down_rate*100).toFixed(1) + '%';
+    $('kLat').textContent = d.avg_latency_ms ? (d.avg_latency_ms/1000).toFixed(1)+'s' : '–';
+    renderTrend(d.daily || []);
+    renderWordcloud(d.wordcloud || []);
+    renderLlmStats(d.llm_stats || null);
+    const hot = $('hot');
+    hot.innerHTML = (d.hot_questions||[]).length
+      ? d.hot_questions.map(h=>`<div class="row"><span class="q">${esc(h.question)}</span><span class="n">×${h.count}</span></div>`).join('')
+      : '<div class="empty">暂无数据，去对话里问几句吧～</div>';
+    const tb = $('recent');
+    tb.innerHTML = (d.recent||[]).map(r=>`<tr>
+      <td>${esc(r.created_at.slice(0,19))}</td>
+      <td>${esc(r.sender_id)}</td>
+      <td>${esc((r.question||'').slice(0,40))}</td>
+      <td><span class="tag ${r.rating}">${r.rating==='up'?'👍 好评':'👎 点踩'}</span></td></tr>`).join('')
+      || '<tr><td colspan="4" style="color:var(--muted)">暂无评价记录</td></tr>';
+  }catch(e){ console.warn('stats', e); }
+  loadReview();
+  loadFaq();
+}
+
+/* ---------- 趋势图 ---------- */
+function renderTrend(daily){
+  if(!window.Chart || !daily.length) return;
+  const labels = daily.map(x=>x.date.slice(5));
+  const datasets = [
+    { label:'评价量', data: daily.map(x=>x.count), borderColor:'#0a84ff',
+      backgroundColor:'rgba(10,132,255,.15)', fill:true, tension:.35, pointRadius:3 },
+    { label:'点踩量', data: daily.map(x=>x.down), borderColor:'#ff453a',
+      backgroundColor:'rgba(255,69,58,.12)', fill:true, tension:.35, pointRadius:3 },
+  ];
+  const hasLat = daily.some(x=>x.avg_latency_ms);
+  if(hasLat){
+    datasets.push({ label:'平均响应(s)', data: daily.map(x=>x.avg_latency_ms?(x.avg_latency_ms/1000):null),
+      borderColor:'#ffd60a', backgroundColor:'rgba(255,214,10,.10)', tension:.35,
+      pointRadius:3, yAxisID:'y1', spanGaps:true });
+  }
+  const scales = {
+    x:{ ticks:{color:'#6e6e73',font:{size:11}}, grid:{color:'rgba(255,255,255,.06)'} },
+    y:{ beginAtZero:true, ticks:{color:'#6e6e73',precision:0}, grid:{color:'rgba(255,255,255,.06)'} },
+  };
+  if(hasLat) scales.y1 = { position:'right', beginAtZero:true,
+    ticks:{color:'#ffd60a',font:{size:11}}, grid:{drawOnChartArea:false} };
+  const cfg = { type:'line', data:{labels, datasets}, options:{
+    responsive:true, interaction:{mode:'index',intersect:false},
+    plugins:{ legend:{ labels:{ color:'#a1a1a6', font:{size:11} } } },
+    scales } };
+  if(trendChart){ trendChart.data = cfg.data; trendChart.options = cfg.options; trendChart.update(); }
+  else trendChart = new Chart($('trend'), cfg);
+}
+
+/* ---------- ⑥ 词云 ---------- */
+let wcChart = null;
+function renderWordcloud(words){
+  if(!window.echarts || !words.length){
+    $('wc').innerHTML = '<div class="empty" style="padding-top:100px;text-align:center">暂无提问数据，去对话里问几句吧～</div>';
+    return;
+  }
+  const palette = ['#0a84ff','#5e5ce6','#bf5af2','#ff375f','#30d158','#ffd60a','#64d2ff'];
+  const cfg = {
+    series: [{
+      type: 'wordCloud',
+      shape: 'circle',
+      width: '96%', height: '92%',
+      sizeRange: [14, 46],
+      rotationRange: [0, 0],
+      gridSize: 6,
+      textStyle: {
+        fontFamily: 'inherit',
+        fontWeight: 700,
+        color: () => palette[Math.floor(Math.random()*palette.length)]
+      },
+      emphasis: { textStyle: { shadowBlur: 8, shadowColor: 'rgba(255,255,255,.35)' } },
+      data: words
+    }]
+  };
+  if(wcChart){ wcChart.setOption(cfg, true); return; }
+  wcChart = echarts.init($('wc'));
+  wcChart.setOption(cfg);
+}
+
+/* ---------- ⑦ LLM 调用追踪 ---------- */
+function renderLlmStats(s){
+  if(!s || !s.total_calls){
+    $('kLlmTotal').textContent = $('kLlmFail').textContent = $('kLlmLat').textContent = '–';
+    $('llmByTrack').innerHTML = '<tr><td colspan="3" style="color:var(--muted)">暂无 LLM 调用记录</td></tr>';
+    $('llmRecent').innerHTML = '<tr><td colspan="6" style="color:var(--muted)">暂无记录</td></tr>';
+    return;
+  }
+  $('kLlmTotal').textContent = s.total_calls;
+  $('kLlmFail').textContent = s.fail_calls || 0;
+  $('kLlmLat').textContent = s.avg_latency_ms ? (s.avg_latency_ms/1000).toFixed(2)+'s' : '–';
+  const trackNames = {plan:'🧭 意图规划', knowledge:'📚 知识问答', chitchat:'💬 闲聊', clarify:'❓ 澄清追问', vision:'👁 图片识别'};
+  $('llmByTrack').innerHTML = (s.by_track||[]).length ? s.by_track.map(t=>`<tr>
+      <td>${trackNames[t.track] || esc(t.track)}</td>
+      <td>${t.count}</td>
+      <td>${(t.avg_latency_ms/1000).toFixed(2)}s</td></tr>`).join('')
+    : '<tr><td colspan="3" style="color:var(--muted)">暂无分链路数据</td></tr>';
+  $('llmRecent').innerHTML = (s.recent||[]).length ? s.recent.map(r=>`<tr>
+      <td>${esc(r.created_at.slice(5,19))}</td>
+      <td>${trackNames[r.track] || esc(r.track)}</td>
+      <td style="max-width:150px;color:var(--muted)">${esc(r.model)}</td>
+      <td>${(r.latency_ms/1000).toFixed(2)}s</td>
+      <td>${r.prompt_chars}</td>
+      <td>${r.ok?'<span class="tag up">成功</span>':'<span class="tag down">失败</span>'}</td></tr>`).join('')
+    : '<tr><td colspan="6" style="color:var(--muted)">暂无记录</td></tr>';
+}
+
+/* ---------- 坏例复核队列 ---------- */
+async function loadReview(){
+  try{
+    const d = await (await fetch('/api/review')).json();
+    const items = d.items || [];
+    const pend = items.filter(x=>x.reviewed===0).length;
+    $('pendCnt').textContent = pend ? `· 待复核 ${pend} 条` : '· 全部处理完毕';
+    $('review').innerHTML = items.length ? items.map(x=>{
+      const st = x.reviewed===0 ? '<span class="tag pend">待复核</span>'
+               : x.reviewed===1 ? '<span class="tag done">已处理</span>'
+               : '<span class="tag miss">知识缺失</span>';
+      const ops = x.reviewed===0
+        ? `<button class="rowbtn" onclick="setReview(${x.id},1)">✅ 已处理</button>
+           <button class="rowbtn" onclick="setReview(${x.id},2)">📚 知识缺失</button>`
+        : `<button class="rowbtn" onclick="setReview(${x.id},0)">↩ 重置</button>`;
+      return `<tr><td>${esc(x.created_at.slice(5,16))}</td>
+        <td style="max-width:180px">${esc(x.question.slice(0,50))}</td>
+        <td style="max-width:200px;color:var(--muted)">${esc(x.answer.slice(0,50))}…</td>
+        <td style="max-width:110px;color:#ffd60a">${x.comment?esc(x.comment):'—'}</td>
+        <td>${st}</td><td>${ops}</td></tr>`;
+    }).join('') : '<tr><td colspan="5" style="color:var(--muted)">还没有点踩记录，服务质量在线 🎉</td></tr>';
+  }catch(e){ console.warn('review', e); }
+}
+async function setReview(id, status){
+  await adminFetch('/api/review',{method:'POST',body:JSON.stringify({id, status})}).catch(()=>{});
+  loadReview();
+}
+
+/* ---------- FAQ 管理 ---------- */
+async function loadFaq(){
+  try{
+    const d = await (await fetch('/api/faq')).json();
+    faqCache = d.items || [];
+    $('faqTable').innerHTML = faqCache.length ? faqCache.map(f=>`<tr>
+      <td>${esc(f.title)}</td>
+      <td style="max-width:160px;color:var(--muted)">${esc(f.keywords.join('、'))}</td>
+      <td style="max-width:220px;color:var(--muted)">${esc(f.answer.slice(0,40))}…</td>
+      <td>${f.enabled?'<span class="tag done">启用</span>':'<span class="tag pend">停用</span>'}</td>
+      <td style="white-space:nowrap">
+        <button class="rowbtn" onclick="editFaq(${f.id})">✏️ 编辑</button>
+        <button class="rowbtn" onclick="toggleFaq(${f.id})">${f.enabled?'⏸ 停用':'▶ 启用'}</button>
+        <button class="rowbtn danger" onclick="delFaq(${f.id})">🗑</button>
+      </td></tr>`).join('') : '<tr><td colspan="5" style="color:var(--muted)">知识库为空</td></tr>';
+  }catch(e){ console.warn('faq', e); }
+}
+function editFaq(id){
+  const f = faqCache.find(x=>x.id===id); if(!f) return;
+  editingId = id;
+  $('faqMode').textContent = '✏️ 编辑 FAQ #' + id;
+  $('fTitle').value = f.title;
+  $('fKeywords').value = f.keywords.join(',');
+  $('fAnswer').value = f.answer;
+  $('fEnabled').checked = f.enabled;
+  $('fCancel').style.display = '';
+  $('faqFormBox').scrollIntoView({behavior:'smooth', block:'center'});
+}
+function resetFaqForm(){
+  editingId = null;
+  $('faqMode').textContent = '➕ 新增 FAQ';
+  $('fTitle').value=''; $('fKeywords').value=''; $('fAnswer').value='';
+  $('fEnabled').checked = true;
+  $('fCancel').style.display = 'none';
+}
+$('fCancel').onclick = resetFaqForm;
+$('fSave').onclick = async ()=>{
+  const title=$('fTitle').value.trim(), answer=$('fAnswer').value.trim();
+  const keywords=$('fKeywords').value.split(/[,，]/).map(s=>s.trim()).filter(Boolean);
+  if(!title || !answer){ alert('标题和答案不能为空'); return; }
+  const payload = {title, keywords, answer, enabled:$('fEnabled').checked};
+  try{
+    const r = editingId
+      ? await adminFetch('/api/faq/'+editingId,{method:'PUT',body:JSON.stringify(payload)})
+      : await adminFetch('/api/faq',{method:'POST',body:JSON.stringify(payload)});
+    if(!r.ok){ const d=await r.json().catch(()=>({})); alert(d.detail||'保存失败'); return; }
+    resetFaqForm(); loadFaq();
+  }catch(e){ /* 401 时 gate 已弹出 */ }
+};
+async function toggleFaq(id){
+  const f = faqCache.find(x=>x.id===id); if(!f) return;
+  try{
+    await adminFetch('/api/faq/'+id,{method:'PUT',body:JSON.stringify(
+      {title:f.title, keywords:f.keywords, answer:f.answer, enabled:!f.enabled})});
+  }catch(e){}
+  loadFaq();
+}
+async function delFaq(id){
+  if(!confirm('确定删除这条 FAQ？')) return;
+  try{ await adminFetch('/api/faq/'+id,{method:'DELETE'}); }catch(e){}
+  loadFaq();
+}
+
+loadAll();
+
+/* ================= 扩展运营台 ================= */
+function fileToB64(file){ return new Promise((res,rej)=>{ const r=new FileReader();
+  r.onload=()=>res(r.result.split(',')[1]); r.onerror=rej; r.readAsDataURL(file); }); }
+
+$('kbUpload').onclick=async ()=>{
+  const f=$('kbFile').files[0];
+  if(!f){ $('kbMsg').style.color='#ffd60a'; $('kbMsg').textContent='请先选择 .txt / .md 文件'; return; }
+  $('kbUpload').disabled=true; $('kbMsg').style.color='#ffd60a'; $('kbMsg').textContent='上传解析中…';
+  try{
+    const d=await adminFetch('/api/kb/upload',{method:'POST',body:JSON.stringify({
+      filename:f.name, content_b64:await fileToB64(f)})});
+    $('kbMsg').style.color='#30d158';
+    $('kbMsg').textContent='✅ 《'+d.doc+'》已入库，切分为 '+d.chunks+' 个知识块，立即生效';
+    loadKb();
+  }catch(e){ $('kbMsg').style.color='#ff7b72'; $('kbMsg').textContent='上传失败：'+e.message; }
+  $('kbUpload').disabled=false;
+};
+
+async function loadKb(){
+  try{
+    const d=await adminFetch('/api/kb/list');
+    $('kbTotal').textContent=d.total;
+    $('kbList').innerHTML=d.docs.length
+      ? d.docs.map(x=>'📎 '+esc(x.doc)+' — '+x.chunks+' 块 / '+x.chars+' 字 <a href="javascript:void(0)" data-del="'+esc(x.doc)+'" style="color:#ff7b72;cursor:pointer">删除</a>').join('<br/>')
+      : '（暂无上传文档，上传 txt/md 即可作为知识源）';
+    $('kbList').querySelectorAll('[data-del]').forEach(a=>a.onclick=async ()=>{
+      if(!confirm('确定删除《'+a.dataset.del+'》的全部知识块？')) return;
+      await adminFetch('/api/kb/'+encodeURIComponent(a.dataset.del),{method:'DELETE'});
+      loadKb();
+    });
+  }catch(e){}
+}
+
+$('faqExport').onclick=async ()=>{
+  try{
+    const r=await adminFetch('/api/faq/export');
+    const blob=new Blob([await r.text()],{type:'text/csv;charset=utf-8'});
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob); a.download='faq_export.csv'; a.click();
+  }catch(e){ alert('导出失败：'+e.message); }
+};
+$('faqImport').onclick=()=>$('faqImportFile').click();
+$('faqImportFile').onchange=async ()=>{
+  const f=$('faqImportFile').files[0]; if(!f) return;
+  if(!confirm('导入会新增 CSV 里的全部 FAQ，继续？')) return;
+  try{
+    const d=await adminFetch('/api/faq/import',{method:'POST',body:JSON.stringify({
+      filename:f.name, content_b64:await fileToB64(f)})});
+    alert('导入完成：新增 '+d.added+' 条，跳过 '+d.skipped+' 条');
+    loadFaq();
+  }catch(e){ alert('导入失败：'+e.message); }
+  $('faqImportFile').value='';
+};
+
+async function loadStars(){
+  try{
+    const r=await fetch('/api/stats/stars'); const d=await r.json();
+    $('kStars').textContent = d.avg_stars ? d.avg_stars.toFixed(2)+' ⭐' : '–';
+    $('kNps').textContent = d.nps===null ? '–' : d.nps;
+    $('kStarCnt').textContent = d.total;
+    const dist=d.distribution||{};
+    $('starDist').innerHTML=[5,4,3,2,1].map(s=>{
+      const c=dist[s]||0, pct=d.total?Math.round(c/d.total*100):0;
+      return '★'.repeat(s)+' '+s+'星：'+c+' 次（'+pct+'%）';
+    }).join('　·　');
+  }catch(e){}
+}
+
+let currentAlert=null;
+function adminBeep(){
+  try{ const ctx=new (window.AudioContext||window.webkitAudioContext)();
+    const o=ctx.createOscillator(), g=ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.frequency.value=880; g.gain.value=.18;
+    o.start(); setTimeout(()=>{o.stop();ctx.close();},320);
+  }catch(e){}
+}
+async function pollTransfer(){
+  try{
+    const d=await adminFetch('/api/admin/transfer-alerts');
+    const first=d.alerts[0];
+    if(first && (!currentAlert || currentAlert.id!==first.id)){
+      currentAlert=first;
+      $('transferAlert').style.display='block';
+      $('transferInfo').textContent='用户 '+first.sender_id+' 于 '+new Date(first.created_at).toLocaleTimeString()+' 请求转人工';
+      adminBeep();
+    } else if(!first){
+      currentAlert=null; $('transferAlert').style.display='none';
+    }
+  }catch(e){}
+}
+$('agentSend').onclick=async ()=>{
+  const t=$('agentText').value.trim(); if(!t){ toast('请输入回复内容'); return; }
+  if(!currentAlert){ toast('没有待处理请求'); return; }
+  try{
+    await adminFetch('/api/admin/transfer-reply',{method:'POST',body:JSON.stringify({
+      sender_id:currentAlert.sender_id, text:t})});
+    toast('✅ 已送达用户会话');
+    $('agentText').value=''; $('transferAlert').style.display='none'; currentAlert=null;
+  }catch(e){ toast(e.message); }
+};
+$('agentSkip').onclick=()=>{ $('transferAlert').style.display='none'; };
+
+loadKb(); loadStars();
+setInterval(pollTransfer, 5000); pollTransfer();
+</script>
+</body>
+</html>

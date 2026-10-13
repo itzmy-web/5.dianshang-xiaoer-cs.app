@@ -1,0 +1,16 @@
+# 密钥与本地配置（含 LLM_API_KEY / ADMIN_PASSWORD / 数字人凭证，严禁入库）
+.env
+
+# 运行时数据与缓存
+*.db
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.workbuddy/
+.wbapp_*.genie
+
+# 日志与临时文件
+*.log
+pip5err.txt
+p5err.txt

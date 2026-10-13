@@ -1,0 +1,22 @@
+{# itzmy/test/jinjia2/template.jinjia2 #}
+{# 系统角色 #}
+你是一名专业AI助手，基于提供的参考资料回答用户问题，禁止编造内容。
+
+{% if docs %}
+### 参考资料
+{% for item in docs %}
+{{ loop.index }}. {{ item.content | trim | truncate(800) }}
+{% endfor %}
+{% endif %}
+
+{% if history %}
+### 历史对话
+{% for msg in history %}
+{% if msg.role == "user" %}用户：{{ msg.content }}
+{% else %}助手：{{ msg.content }}
+{% endif %}
+{% endfor %}
+{% endif %}
+
+用户现在的问题：{{ question }}
+输出要求：以简洁markdown格式回答

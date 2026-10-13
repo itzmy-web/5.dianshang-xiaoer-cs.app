@@ -1,0 +1,1296 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="电商小二：7×24 AI 智能客服，查订单、办退款、找商品，支持语音朗读与图片识别。" />
+<meta property="og:title" content="电商小二 · AI 智能客服" />
+<meta property="og:description" content="查订单 / 办退款 / 找商品 / 智能问答，一条对话全办完。" />
+<title>电商小二 · 智能客服</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛍️</text></svg>">
+<style>
+  :root{
+    --bg:#eef2f4; --surface:#ffffff; --surface-2:#f2f6f5;
+    --hairline:rgba(35,43,58,.10);
+    --txt:#232b3a; --sub:#6b7686; --muted:#9aa4b0;
+    --navy:#232b3a; --navy-2:#2b3546;
+    --teal:#1fc2a7; --teal-deep:#12a88d; --teal-soft:rgba(31,194,167,.12);
+    --grad:linear-gradient(135deg,#25d0b2 0%,#12a88d 100%);
+    --acc:#12a88d; --ok:#12a88d; --warn:#d9a406; --err:#c9382e;
+    --radius:14px; --shadow:0 18px 44px rgba(35,60,55,.10);
+    --font:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","PingFang SC","Helvetica Neue","Microsoft YaHei",sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{font-family:var(--font);color:var(--txt);background:var(--bg);
+    -webkit-font-smoothing:antialiased;min-height:100vh;overflow-x:hidden}
+  ::selection{background:rgba(31,194,167,.3)}
+  ::-webkit-scrollbar{width:8px;height:8px}
+  ::-webkit-scrollbar-thumb{background:rgba(35,43,58,.22);border-radius:4px}
+
+  .stage-bg{position:fixed;inset:0;z-index:-1;overflow:hidden}
+  .beam{position:absolute;top:-30%;width:30vw;height:150%;opacity:.10;filter:blur(30px);transform-origin:top center}
+  .beam.b1{left:5%;background:linear-gradient(180deg,#bfe8de,transparent 75%);transform:rotate(15deg);animation:sway 9s ease-in-out infinite alternate}
+  .beam.b2{left:42%;background:linear-gradient(180deg,#d7efe8,transparent 75%);transform:rotate(-7deg);animation:sway 11s ease-in-out infinite alternate-reverse}
+  .beam.b3{left:75%;background:linear-gradient(180deg,#a8e0d3,transparent 75%);transform:rotate(9deg);animation:sway 13s ease-in-out infinite alternate}
+  @keyframes sway{from{transform:rotate(9deg) translateX(-2vw)}to{transform:rotate(-6deg) translateX(2vw)}}
+  .aurora{position:absolute;border-radius:50%;filter:blur(110px);opacity:.16}
+  .aurora.a1{width:46vw;height:46vw;left:-12vw;top:-18vw;background:radial-gradient(circle,#a8e0d3,transparent 65%);animation:drift 17s ease-in-out infinite alternate}
+  .aurora.a2{width:40vw;height:40vw;right:-12vw;bottom:-14vw;background:radial-gradient(circle,#cdeade,transparent 65%);animation:drift 20s ease-in-out infinite alternate-reverse}
+  @keyframes drift{from{transform:translate(0,0) scale(1)}to{transform:translate(4vw,3vh) scale(1.1)}}
+
+  /* 侧边任务栏（参考图 2：企业级 SaaS 深藏蓝侧栏） */
+  .sidenav{position:fixed;left:0;top:0;bottom:0;width:216px;z-index:60;
+    background:linear-gradient(180deg,#2b3546 0%,#232b3a 100%);
+    display:flex;flex-direction:column;padding:20px 14px;box-shadow:6px 0 30px rgba(23,32,45,.25)}
+  .sidenav .brand{display:flex;align-items:center;gap:11px;padding:4px 8px 18px}
+  .sidenav .brand .blogo{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;
+    background:var(--grad);color:#fff;font-size:20px;font-weight:800;box-shadow:0 8px 20px rgba(18,168,141,.40)}
+  .sidenav .brand .bt{line-height:1.3}
+  .sidenav .brand .bt b{display:block;font-size:15px;color:#fff}
+  .sidenav .brand .bt span{font-size:10px;letter-spacing:.14em;color:rgba(255,255,255,.42)}
+  .sidenav .item{display:flex;align-items:center;gap:11px;padding:13px 14px;margin-bottom:6px;
+    border-radius:12px;border:1px solid transparent;cursor:pointer;
+    font-size:14px;font-weight:600;color:rgba(255,255,255,.62);transition:.18s;user-select:none}
+  .sidenav .item:hover{background:rgba(255,255,255,.08);color:#fff}
+  .sidenav .item.on{background:var(--teal);color:#fff;
+    box-shadow:0 8px 22px rgba(31,194,167,.40)}
+  .sidenav .item .ic{font-size:17px;width:22px;text-align:center}
+  .sidenav .sp{flex:1}
+  .sidenav .foot{font-size:11.5px;color:rgba(255,255,255,.45);padding:10px 8px;line-height:1.8;border-top:1px solid rgba(255,255,255,.12)}
+  .sidenav .foot a{color:rgba(255,255,255,.72);cursor:pointer;text-decoration:none}
+  .sidenav .foot a:hover{color:#fff}
+  .wrap{max-width:1200px;margin:0 0 0 216px;padding:26px 26px 40px}
+  @media (max-width:1080px){
+    .sidenav{position:static;width:auto;flex-direction:row;align-items:center;padding:10px 14px;
+      border-right:0;border-bottom:1px solid rgba(255,255,255,.12);overflow-x:auto}
+    .sidenav .brand .bt{display:none}
+    .sidenav .item{margin-bottom:0;white-space:nowrap}
+    .sidenav .sp,.sidenav .foot{display:none}
+    .wrap{margin-left:0}
+  }
+  .top{display:flex;align-items:center;gap:13px;margin-bottom:18px;flex-wrap:wrap}
+  .top .logo{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;
+    background:var(--grad);font-size:21px;box-shadow:0 10px 26px rgba(18,168,141,.35)}
+  .top .name{font-size:19px;font-weight:700}
+  .top .name span{background:linear-gradient(90deg,#12a88d,#232b3a);
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .top .sp{flex:1}
+  .pill{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;color:var(--sub);
+    border:1px solid var(--hairline);background:var(--surface);padding:8px 14px;border-radius:999px}
+  .pill .dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+  .pill.on .dot{background:var(--ok);box-shadow:0 0 10px var(--ok)}
+  .pill.err .dot{background:var(--err)}
+  .pill.busy .dot{background:var(--warn);box-shadow:0 0 10px var(--warn)}
+  .toplink{color:var(--sub);text-decoration:none;font-size:12.5px;border:1px solid var(--hairline);
+    padding:8px 14px;border-radius:999px;background:var(--surface);transition:.2s}
+  .toplink:hover{color:var(--teal-deep);border-color:rgba(31,194,167,.45)}
+
+  .kicker{display:inline-block;font-size:11.5px;letter-spacing:.22em;color:var(--teal-deep);
+    border:1px solid rgba(31,194,167,.45);padding:5px 13px;border-radius:999px;margin-bottom:12px;
+    background:var(--teal-soft)}
+  h1{font-size:clamp(24px,2.8vw,36px);line-height:1.15;margin:0 0 6px;font-weight:800;letter-spacing:-.02em}
+  h1 .g{background:linear-gradient(120deg,#25d0b2,#12a88d,#0d8a73,#25d0b2);
+    background-size:220% auto;-webkit-background-clip:text;background-clip:text;color:transparent;
+    animation:shine 7s linear infinite}
+  @keyframes shine{to{background-position:220% center}}
+  .lead{color:var(--sub);font-size:13.5px;line-height:1.7;margin:0 0 22px}
+
+  .grid{display:grid;grid-template-columns:1fr;gap:20px;align-items:stretch}
+  @media (max-width:960px){
+    .grid{grid-template-columns:1fr}
+    .chat{order:1;min-height:520px}
+  }
+  .card{background:var(--surface);border:1px solid var(--hairline);border-radius:var(--radius);
+    backdrop-filter:blur(24px) saturate(160%);box-shadow:0 10px 34px rgba(35,60,55,.08);overflow:hidden}
+
+  /* 聊天工作台 */
+  .chat{display:flex;flex-direction:column;min-height:600px}
+  #chatView{display:flex;flex-direction:column;flex:1;min-height:0}
+  #dashView{display:none;flex:1;min-height:0;background:#000}
+  #dashView iframe{width:100%;height:100%;border:0;display:block}
+  .chat-head{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--hairline)}
+  .chat-head .t{font-size:14px;color:var(--txt);font-weight:700}
+  .chat-head .t::after{content:" ▾";color:var(--muted);font-weight:400;font-size:11px}
+  .chat-head .sp{flex:1}
+  .toggle{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--sub);cursor:pointer;
+    border:1px solid var(--hairline);border-radius:999px;padding:6px 12px;transition:.2s;user-select:none}
+  .toggle.on{color:var(--teal-deep);border-color:var(--teal);background:var(--teal-soft)}
+  .msgs{flex:1;overflow-y:auto;padding:22px 22px 12px;display:flex;flex-direction:column;gap:14px;background:#f7faf9}
+  .msg{display:flex;gap:10px;max-width:86%}
+  .msg .av{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;flex:none;font-size:17px}
+  .msg.bot .av{background:var(--grad);box-shadow:0 6px 16px rgba(18,168,141,.35)}
+  .msg.user{align-self:flex-end;flex-direction:row-reverse}
+  .msg.user .av{background:var(--navy);color:#fff}
+  .msg .body{display:flex;flex-direction:column;gap:6px;min-width:0}
+  .msg .bubble{padding:12px 15px;border-radius:16px;font-size:14px;line-height:1.75;white-space:pre-wrap;word-break:break-word}
+  .msg.bot .bubble{background:#fff;border:1px solid var(--hairline);border-top-left-radius:5px}
+  .msg.user .bubble{background:linear-gradient(135deg,#25d0b2,#12a88d);
+    color:#fff;border:1px solid rgba(18,168,141,.5);border-top-right-radius:5px}
+  /* 订单/商品卡片 */
+  .objcard{display:flex;gap:12px;align-items:center;padding:12px 14px;border-radius:14px;
+    background:var(--teal-soft);border:1px solid rgba(31,194,167,.40);cursor:pointer;transition:.2s}
+  .objcard:hover{background:rgba(31,194,167,.20);transform:translateY(-1px)}
+  .objcard.order{background:rgba(48,209,88,.10);border-color:rgba(48,209,88,.35)}
+  .objcard.order:hover{background:rgba(48,209,88,.18)}
+  .objcard .ic{font-size:24px}
+  .objcard .ot{font-size:13.5px;font-weight:600}
+  .objcard .od{font-size:12px;color:var(--sub);margin-top:2px}
+  .objcard .go{margin-left:auto;font-size:12px;color:var(--teal-deep);white-space:nowrap}
+  /* 图片消息 + 流式光标 */
+  .bubble img{max-width:190px;max-height:190px;border-radius:10px;display:block}
+  .cursor{display:inline-block;width:2px;height:15px;background:var(--teal);animation:blinkc .8s infinite;vertical-align:-2px;margin-left:2px}
+  @keyframes blinkc{0%,100%{opacity:1}50%{opacity:0}}
+  /* 消息时间戳 */
+  .msg .ts{font-size:10.5px;color:var(--muted);padding:0 4px;font-variant-numeric:tabular-nums}
+  .msg.user .ts{text-align:right}
+  /* 欢迎引导宫格 */
+  .welcome{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:2px}
+  .welcome button{border:1px solid var(--hairline);background:#fff;color:var(--txt);
+    border-radius:12px;padding:12px 10px;font-size:13px;cursor:pointer;font-family:inherit;transition:.2s;text-align:left}
+  .welcome button:hover{border-color:var(--teal);background:var(--teal-soft);transform:translateY(-1px)}
+  /* ⑤ 澄清选项气泡 */
+  .choices{display:flex;flex-wrap:wrap;gap:8px;margin:2px 0 4px}
+  .choices button{border:1px solid var(--teal);color:var(--teal-deep);background:var(--teal-soft);
+    border-radius:999px;padding:8px 14px;font-size:13px;cursor:pointer;font-family:inherit;transition:.2s}
+  .choices button:hover{background:var(--teal);color:#fff;transform:translateY(-1px)}
+  /* 工具条（提示音/朗读/新话题/导出） */
+  .toolbar{display:flex;gap:8px;padding:9px 16px;border-bottom:1px solid var(--hairline);flex-wrap:wrap;background:#fff}
+  .mtoggle{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--sub);cursor:pointer;
+    border:1px solid var(--hairline);border-radius:9px;padding:6px 11px;background:transparent;
+    font-family:inherit;transition:.2s;user-select:none}
+  .mtoggle:hover{color:var(--teal-deep);border-color:var(--teal)}
+  .mtoggle.on{color:var(--teal-deep);border-color:var(--teal);background:var(--teal-soft)}
+  /* 流程进度条 */
+  #flowProg{display:none;padding:10px 18px;border-bottom:1px solid var(--hairline);background:var(--teal-soft)}
+  #flowProg.show{display:block}
+  .fp-title{font-size:11.5px;color:var(--teal-deep);margin-bottom:7px;letter-spacing:.04em;font-weight:700}
+  .fp-steps{display:flex;align-items:center;gap:0}
+  .fp-step{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--muted);white-space:nowrap}
+  .fp-step .dot{width:18px;height:18px;border-radius:50%;border:2px solid var(--muted);display:grid;place-items:center;
+    font-size:10px;color:var(--muted);flex:none}
+  .fp-step.done{color:var(--teal-deep)} .fp-step.done .dot{border-color:var(--teal);background:var(--teal);color:#fff}
+  .fp-step.done .dot::after{content:"✓"}
+  .fp-step.cur{color:var(--teal-deep);font-weight:700} .fp-step.cur .dot{border-color:var(--teal);color:var(--teal-deep);background:#fff}
+  .fp-line{width:26px;height:2px;background:var(--hairline);margin:0 8px;flex:none}
+  .fp-line.done{background:var(--teal)}
+  /* 输入联想 */
+  #sug{display:none;position:absolute;bottom:calc(100% + 8px);left:14px;right:14px;z-index:40;
+    background:#fff;border:1px solid var(--hairline);border-radius:14px;overflow:hidden;
+    box-shadow:var(--shadow)}
+  #sug.show{display:block}
+  #sug .si{display:flex;align-items:center;gap:9px;padding:10px 14px;font-size:13px;color:var(--txt);cursor:pointer}
+  #sug .si:hover{background:var(--teal-soft)}
+  #sug .si .ic{font-size:12px;color:var(--teal-deep)}
+  .inputbar{position:relative}
+  /* 复制按钮 */
+  .msg .cp{border:1px solid var(--hairline);background:transparent;color:var(--muted);border-radius:8px;
+    padding:2px 8px;font-size:11px;cursor:pointer;opacity:0;transition:.2s;font-family:inherit}
+  .msg:hover .cp{opacity:1}
+  .msg .cp:hover{color:var(--teal-deep);border-color:var(--teal)}
+  /* 深色主题（body.dark 覆盖变量，🌓 可切换） */
+  body.dark{--bg:#0c0c0e;--surface:rgba(255,255,255,.06);--surface-2:rgba(118,118,128,.16);
+    --hairline:rgba(255,255,255,.12);--txt:#f5f5f7;--sub:#a1a1a6;--muted:#6e6e73;
+    --grad:linear-gradient(135deg,#25d0b2 0%,#12a88d 100%);
+    --acc:#25d0b2;--shadow:0 30px 80px rgba(0,0,0,.55)}
+  body.dark .stage-bg{opacity:.7}
+  body.dark .msg.bot .bubble{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.14)}
+  body.dark .msg.user .bubble{background:linear-gradient(135deg,rgba(37,208,178,.30),rgba(18,168,141,.30));border-color:rgba(37,208,178,.40)}
+  body.dark .card{background:rgba(20,20,24,.85)}
+  body.dark .dh{background:radial-gradient(120% 90% at 50% 0%, rgba(31,194,167,.10), transparent 55%), #0b0b0f}
+  body.dark .sidenav{background:#141416;border-color:rgba(255,255,255,.10)}
+  body.dark .sidenav .item{color:#c7c7cc}
+  body.dark .sidenav .item.on{background:rgba(31,194,167,.25);color:#fff;border-color:rgba(31,194,167,.5)}
+  body.dark .msgs{background:transparent}
+  /* 评价 */
+  .fb{display:flex;gap:8px;align-items:center}
+  .fb button{border:1px solid var(--hairline);background:var(--surface-2);color:var(--sub);
+    border-radius:9px;padding:4px 10px;font-size:12px;cursor:pointer;transition:.2s;font-family:inherit}
+  .fb button:hover{color:var(--teal-deep);border-color:var(--teal)}
+  .fb button.sel{color:#fff;border-color:var(--ok);background:var(--teal)}
+  .fb button.sel.down{border-color:var(--err);background:rgba(255,69,58,.85)}
+  .fb .thx{font-size:11.5px;color:var(--ok)}
+  .typing{display:inline-flex;gap:5px;align-items:center;padding:4px 2px}
+  .typing i{width:7px;height:7px;border-radius:50%;background:var(--sub);animation:blink 1.2s infinite}
+  .typing i:nth-child(2){animation-delay:.2s}.typing i:nth-child(3){animation-delay:.4s}
+  @keyframes blink{0%,80%,100%{opacity:.25}40%{opacity:1}}
+  .inputbar{display:flex;gap:10px;padding:14px 18px 18px;border-top:1px solid var(--hairline);background:#fff}
+  .inputbar input{flex:1;border:1px solid transparent;border-radius:13px;background:var(--surface-2);
+    color:var(--txt);font-size:14.5px;padding:13px 15px;outline:none;font-family:inherit;transition:.2s}
+  .inputbar input:focus{border-color:var(--teal);box-shadow:0 0 0 4px rgba(31,194,167,.16)}
+  .mic{border:1px solid var(--hairline);border-radius:13px;background:var(--surface-2);color:var(--sub);
+    font-size:17px;cursor:pointer;padding:0 15px;transition:.2s}
+  .mic:hover{color:var(--teal-deep);border-color:var(--teal)}
+  .mic.rec{color:#fff;border-color:var(--err);background:rgba(255,69,58,.25);animation:pulse 1.2s infinite}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,69,58,.4)}50%{box-shadow:0 0 0 8px rgba(255,69,58,0)}}
+  .send{border:0;border-radius:13px;padding:0 22px;font-size:14.5px;font-weight:700;cursor:pointer;
+    background:var(--grad);color:#fff;font-family:inherit;transition:.2s;box-shadow:0 8px 22px rgba(18,168,141,.38)}
+  .send:hover{filter:brightness(1.07)}
+  .send:disabled{opacity:.4;cursor:not-allowed;filter:none}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;padding:0 18px 12px;background:#fff}
+  .chip{font-size:12px;color:var(--sub);background:var(--surface-2);border:1px solid var(--hairline);
+    border-radius:999px;padding:6px 12px;cursor:pointer;transition:.2s;font-family:inherit}
+  .chip:hover{color:var(--teal-deep);border-color:var(--teal);background:var(--teal-soft)}
+  .toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%) translateY(20px);
+    background:rgba(28,28,30,.92);border:1px solid var(--hairline);color:#fff;padding:12px 20px;border-radius:14px;
+    font-size:13px;box-shadow:var(--shadow);opacity:0;transition:.25s;pointer-events:none;z-index:70;backdrop-filter:blur(20px)}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  /* ============ 商城数据页 ============ */
+  .mv-wrap{max-width:640px;display:flex;flex-direction:column;gap:14px}
+  .mv-title{font-weight:800;font-size:15px;color:var(--txt);display:flex;align-items:center;gap:8px}
+  .mv-sub{font-size:12px;color:var(--muted);font-weight:400;margin-left:auto}
+  .mv-tools{display:flex;gap:8px;flex-wrap:wrap}
+  .mv-tools input{flex:1;min-width:150px;border:1px solid var(--hairline);border-radius:12px;
+    background:var(--surface-2);color:var(--txt);font-size:13.5px;padding:11px 14px;outline:none;font-family:inherit;transition:.2s}
+  .mv-tools input:focus{border-color:var(--teal);box-shadow:0 0 0 4px rgba(31,194,167,.16)}
+  .mv-btn{border:0;border-radius:12px;padding:11px 18px;font-size:13.5px;font-weight:700;cursor:pointer;
+    background:var(--grad);color:#fff;font-family:inherit;transition:.2s;box-shadow:0 8px 20px rgba(18,168,141,.30)}
+  .mv-btn:hover{filter:brightness(1.07)}
+  .mv-btn.ghost{background:var(--surface-2);color:var(--txt);border:1px solid var(--hairline);box-shadow:none}
+  .mcard{border:1px solid var(--hairline);border-radius:14px;padding:12px 14px;background:var(--surface-2);cursor:pointer;transition:.2s}
+  .mcard:hover{border-color:var(--teal);background:#fff;transform:translateY(-1px)}
+  .mcard .mt2{font-weight:700;font-size:13.5px;color:var(--txt)}
+  .mcard .md2{font-size:12px;color:var(--sub);margin-top:3px;line-height:1.6}
+  .ptag{display:inline-block;font-size:11px;padding:2px 9px;border-radius:999px;margin-left:8px;vertical-align:1px}
+  .ptag.ok{background:var(--teal-soft);color:var(--teal-deep)}
+  .ptag.warn{background:rgba(217,164,6,.14);color:#a67c00}
+  .ptag.done{background:rgba(18,168,141,.16);color:var(--teal-deep)}
+  .logi{border-left:2px solid var(--teal);margin:6px 0 0 8px;padding-left:14px;display:flex;flex-direction:column;gap:6px}
+  .logi-step{font-size:12.5px;color:var(--sub);line-height:1.6}
+  .logi-step .lt{color:var(--muted);font-variant-numeric:tabular-nums;margin-right:8px}
+  /* ============ 帮助中心页 ============ */
+  .help-grid{display:grid;grid-template-columns:1fr;gap:12px;max-width:640px}
+  .hcard{border:1px solid var(--hairline);border-radius:16px;padding:16px;background:var(--surface-2);transition:.2s}
+  .hcard:hover{border-color:rgba(31,194,167,.45)}
+  .hcard .ht{font-weight:800;font-size:14.5px;color:var(--txt);display:flex;gap:9px;align-items:center}
+  .hcard .hd{font-size:12.5px;color:var(--sub);line-height:1.75;margin:8px 0 10px}
+  .hcard .hb{display:flex;flex-direction:column;gap:6px;background:#fff;border:1px solid var(--hairline);
+    border-radius:12px;padding:10px 12px;margin-bottom:10px}
+  .mini-bub{font-size:12.5px;padding:7px 11px;border-radius:10px;max-width:88%;line-height:1.6}
+  .mini-bub.q{background:var(--navy);color:#fff;align-self:flex-end;border-bottom-right-radius:3px}
+  .mini-bub.a{background:var(--surface-2);border:1px solid var(--hairline);align-self:flex-start;border-bottom-left-radius:3px}
+  .hgo{border:0;border-radius:10px;padding:9px 16px;font-size:12.5px;font-weight:700;cursor:pointer;
+    background:var(--grad);color:#fff;font-family:inherit;transition:.2s;align-self:flex-start}
+  .hgo:hover{filter:brightness(1.07)}
+
+  </style>
+</head>
+<body>
+<div class="stage-bg">
+  <div class="beam b1"></div><div class="beam b2"></div><div class="beam b3"></div>
+  <div class="aurora a1"></div><div class="aurora a2"></div>
+</div>
+
+<div class="wrap">
+  <aside class="sidenav">
+    <div class="brand">
+      <div class="blogo">🛍️</div>
+      <div class="bt"><b>电商小二</b><span>SMART SERVICE</span></div>
+    </div>
+    <div class="item on" id="navChat"><span class="ic">💬</span>对话工作台</div>
+    <div class="item" id="navSessions"><span class="ic">🕘</span>历史会话</div>
+    <div class="item" id="navMall"><span class="ic">🛒</span>商城数据</div>
+    <div class="item" id="navHelp"><span class="ic">❓</span>帮助中心</div>
+    <div class="item" id="navSet"><span class="ic">⚙️</span>偏好设置</div>
+    <div class="item" id="navDash"><span class="ic">📊</span>运营看板</div>
+    <div class="sp"></div>
+    <div class="foot">
+      <div>👤 <span id="userNameSide">…</span></div>
+      <div style="margin-top:6px"><a id="logoutBtn">退出登录</a> · <a id="themeBtn">🌓 主题</a></div>
+    </div>
+  </aside>
+  <div class="wrap">
+  <div class="top">
+    <span class="pill" id="userPill">👤 <span id="userName">…</span></span>
+    <span class="sp"></span>
+    <span class="mtoggle" id="refreshBtn" style="cursor:pointer" title="刷新当前页面">↻ 刷新</span>
+  </div>
+
+  <span class="kicker">AI CUSTOMER SERVICE</span>
+  <h1>你的 <span class="g">7×24 电商客服小二</span>，已上线。</h1>
+  <p class="lead">业务办理（退款/物流/查订单）· 商品与 FAQ 知识问答 · 日常闲聊，三轨智能路由。点订单卡片可快速聚焦，每条回复都能 👍/👎 评价。</p>
+
+  <div class="grid">
+    <!-- 聊天工作台 -->
+    <div class="card chat">
+      <div class="chat-head">
+        <span class="t">对话工作台</span>
+        <span class="sp"></span>
+      </div>
+      <div class="toolbar">
+        <span class="mtoggle" id="voiceBtn" style="cursor:pointer">🎤 语音</span>
+        <span class="mtoggle on" id="soundToggle">🔔 提示音</span>
+        <span class="mtoggle on" id="speakToggle">🔊 朗读</span>
+        <span class="mtoggle" id="newTopicBtn" style="cursor:pointer">➕ 新话题</span>
+      </div>
+      <div id="flowProg">
+        <div class="fp-title" id="fpTitle">退款申请进行中</div>
+        <div class="fp-steps" id="fpSteps"></div>
+      </div>
+      <div id="chatView">
+        <div class="msgs" id="msgs"></div>
+        <div class="chips">
+          <button class="chip">我要退款</button>
+          <button class="chip">退货政策是什么？</button>
+          <button class="chip">多久能发货？</button>
+          <button class="chip">有没有商品推荐？</button>
+          <button class="chip">你好呀，叫我土豆</button>
+          <button class="chip" data-obj="order">📦 点击订单卡片 DD2024001</button>
+          <button class="chip" data-transfer>🙋 转人工</button>
+        </div>
+      <div class="inputbar">
+        <div id="sug"></div>
+        <input id="input" placeholder="输入你的问题，回车发送…" autocomplete="off" />
+        <button class="mic" id="imgBtn" title="发图片（AI 识图）">📷</button>
+        <input type="file" id="imgFile" accept="image/*" hidden />
+        <button class="mic" id="micBtn" title="语音输入">🎤</button>
+        <button class="send" id="sendBtn">发送</button>
+      </div>
+      </div>
+      <div id="sessionView" style="display:none;flex-direction:column;flex:1;min-height:0;overflow:auto;padding:18px">
+        <div style="font-weight:800;font-size:15px;color:var(--txt);margin-bottom:12px">🕘 历史会话</div>
+        <div id="sessionList" style="display:flex;flex-direction:column;gap:10px"></div>
+        <div id="sessionEmpty" style="display:none;color:var(--muted);font-size:13px;padding:20px 0">暂无历史会话，去对话页聊点什么吧～</div>
+      </div>
+      <div id="setView" style="display:none;flex-direction:column;flex:1;min-height:0;overflow:auto;padding:18px">
+        <div style="font-weight:800;font-size:15px;color:var(--txt);margin-bottom:14px">⚙️ 设置</div>
+        <div style="max-width:520px;display:flex;flex-direction:column;gap:16px;font-size:13.5px;color:var(--sub)">
+          <div style="border:1px solid var(--hairline);border-radius:14px;padding:14px 16px;background:var(--surface-2)">
+            <div style="font-weight:700;color:var(--txt);margin-bottom:10px">🔔 提示与朗读</div>
+            <label style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;cursor:pointer">
+              <span>消息提示音</span><input type="checkbox" id="setSound" style="width:18px;height:18px;accent-color:#12a88d" />
+            </label>
+            <label style="display:flex;justify-content:space-between;align-items:center;cursor:pointer">
+              <span>AI 回复自动朗读</span><input type="checkbox" id="setSpeak" style="width:18px;height:18px;accent-color:#12a88d" />
+            </label>
+          </div>
+          <div style="border:1px solid var(--hairline);border-radius:14px;padding:14px 16px;background:var(--surface-2)">
+            <div style="font-weight:700;color:var(--txt);margin-bottom:10px">🔊 朗读语速与音量</div>
+            <label style="display:block;margin-bottom:12px">语速 <b id="rateV2">1.0x</b>
+              <input id="rateSlider2" type="range" min="0.5" max="2" step="0.1" value="1" style="width:100%;margin-top:6px" />
+            </label>
+            <label style="display:block">音量 <b id="volV2">100%</b>
+              <input id="volSlider2" type="range" min="0" max="1" step="0.05" value="1" style="width:100%;margin-top:6px" />
+            </label>
+            <div style="font-size:12px;color:var(--muted);margin-top:8px;line-height:1.7">
+              使用浏览器内置语音朗读，语速与音量即时生效。</div>
+          </div>
+          <div style="border:1px solid var(--hairline);border-radius:14px;padding:14px 16px;background:var(--surface-2)">
+            <div style="font-weight:700;color:var(--txt);margin-bottom:10px">📤 数据</div>
+            <button id="exportBtn2" style="width:100%;border:1px solid var(--hairline);border-radius:12px;padding:11px;
+              background:var(--surface);color:var(--txt);font-family:inherit;cursor:pointer;font-size:13px">⬇ 导出当前对话记录（txt）</button>
+          </div>
+        </div>
+      </div>
+      <div id="mallView" style="display:none;flex-direction:column;flex:1;min-height:0;overflow:auto;padding:18px">
+        <div class="mv-wrap">
+          <div class="mv-title">🛒 商城数据<span class="mv-sub">演示商城 · 内置 Mock 商城 API 实时查询</span></div>
+
+          <div>
+            <div class="mv-title" style="font-size:13.5px;margin-bottom:10px">📦 我的订单<span class="mv-sub">点击卡片查物流</span></div>
+            <div style="display:grid;grid-template-columns:1fr;gap:10px" id="mallOrders"></div>
+          </div>
+
+          <div>
+            <div class="mv-title" style="font-size:13.5px;margin-bottom:10px">🔍 订单 / 物流查询</div>
+            <div class="mv-tools">
+              <input id="mallOrderInput" placeholder="输入订单号，如 DD2024001" style="flex:2" />
+              <button class="mv-btn" id="mallOrderBtn">查订单</button>
+              <button class="mv-btn ghost" id="mallLogiBtn">查物流</button>
+            </div>
+            <div id="mallOrderResult" style="margin-top:10px"></div>
+          </div>
+
+          <div>
+            <div class="mv-title" style="font-size:13.5px;margin-bottom:10px">🏷️ 商品搜索</div>
+            <div class="mv-tools">
+              <input id="mallSearchInput" placeholder="输入关键词，如 耳机 / T恤 / 手机" style="flex:2" />
+              <button class="mv-btn" id="mallSearchBtn">搜索</button>
+            </div>
+            <div id="mallSearchResult" style="margin-top:10px;display:grid;grid-template-columns:1fr;gap:10px"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="helpView" style="display:none;flex-direction:column;flex:1;min-height:0;overflow:auto;padding:18px">
+        <div class="help-grid">
+          <div class="mv-title" style="margin-bottom:2px">❓ 帮助中心<span class="mv-sub">三大核心能力 · 点「去试试」直接体验</span></div>
+
+          <div class="hcard">
+            <div class="ht">🤖 智能应答</div>
+            <div class="hd">意图识别后三轨路由：任务轨办业务、知识轨答咨询、闲聊轨唠家常。FAQ 知识库支持关键词命中 + <b>bge-m3 语义向量检索</b>兜底（相似度 ≥0.50），后台可在线增删改，改完即时生效。</div>
+            <div class="hb">
+              <div class="mini-bub q">退货怎么办？</div>
+              <div class="mini-bub a">签收后 7 天内支持无理由退货，质量问题 15 天内可退～<br/>📚 来源：FAQ《退换货政策》</div>
+            </div>
+            <button class="hgo" data-try="退货政策是什么？">去试试 →</button>
+          </div>
+
+          <div class="hcard">
+            <div class="ht">🧾 工单流转</div>
+            <div class="hd">多轮任务办理：退款申请自动收集订单号、退款原因（槽位填充），顶部 <b>4 步进度条</b>随对话实时点亮；中途可随时「➕新话题」打断换任务，状态不串味；连发两句不满自动触发转人工。</div>
+            <div class="hb">
+              <div class="mini-bub q">我要退款</div>
+              <div class="mini-bub a">好的，请提供订单号（如 DD2024001），我马上为您办理（步骤 2/4）</div>
+            </div>
+            <button class="hgo" data-try="我要退款">去试试 →</button>
+          </div>
+
+          <div class="hcard">
+            <div class="ht">📊 客户洞察</div>
+            <div class="hd">运营数据看板（左侧「运营看板」进入）：5 项 KPI、评价趋势双轴折线图、用户问题词云、<b>LLM 调用追踪</b>（mini-Langfuse）、坏例复核队列——点踩的对话进队列，补一条 FAQ 立即生效。</div>
+            <div class="hb">
+              <div class="mini-bub q">📊 打开运营看板能看到什么？</div>
+              <div class="mini-bub a">累计评价 / 👍👎 / 点踩率 / 平均响应时长 / LLM 链路耗时，一眼看清服务质量</div>
+            </div>
+            <button class="hgo" data-try="有没有商品推荐？">去试试 →</button>
+          </div>
+
+          <div class="hcard">
+            <div class="ht">🛠 更多能力</div>
+            <div class="hd">🎤 语音输入与朗读（Chrome/Edge）· 📷 上传截图 AI 识图 · 🕒 会话记忆（「叫我土豆」）· ⬇ 导出对话 · 🌓 深浅主题 · 🔔 提示音。顶部「↻ 刷新」可随时刷新当前页面数据。</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="dashView">
+        <iframe id="dashFrame" title="运营看板" src="about:blank"></iframe>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2400);}
+
+// 登录态存 sessionStorage：每次新开标签页都必须先登录（用户明确要求）
+let SID = sessionStorage.getItem('cs_user');
+const TOKEN = sessionStorage.getItem('cs_token');
+// 清掉历史版本残留在 localStorage 的旧登录态，防止绕过登录
+['cs_token','cs_user','cs_display','cs_auth_ver'].forEach(k=>localStorage.removeItem(k));
+if(!SID || !TOKEN){ location.replace('login.html'); }
+// 服务端校验 token（服务重启后内存 token 失效 → 踢回登录页重新登录）
+(async ()=>{
+  try{
+    const r = await fetch('/api/auth/me?token='+encodeURIComponent(TOKEN||''));
+    if(!r.ok) throw new Error('expired');
+  }catch(e){
+    ['cs_token','cs_user','cs_display','cs_auth_ver'].forEach(k=>sessionStorage.removeItem(k));
+    location.replace('login.html');
+  }
+})();
+// 登录态展示 + 退出（顶栏优先显示昵称，如「微信用户_xxx」/「游客」）
+$('userName').textContent = sessionStorage.getItem('cs_display') || SID; const _us=$('userNameSide'); if(_us) _us.textContent = sessionStorage.getItem('cs_display') || SID;
+$('logoutBtn').onclick = async () => {
+  // 通知服务端销毁 token + 清 cookie，再清前端副本
+  try{ await fetch('/api/auth/logout', {method:'POST'}); }catch(e){}
+  ['cs_token','cs_user','cs_display','cs_auth_ver'].forEach(k=>sessionStorage.removeItem(k));
+  location.href = 'login.html';
+};
+
+/* ---------- 聊天 ---------- */
+const msgs = $('msgs');
+let speakOn = true;
+let lastQuestion = '';
+
+function esc(s){return (s||'').replace(/&/g,'&lt;').replace(/</g,'&lt;');}
+function nowTs(){const d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}
+/* 新消息提示音（WebAudio 合成，无需音频文件） */
+let soundOn=true;
+function ding(){
+  if(!soundOn) return;
+  try{
+    const ctx = ding._ctx || (ding._ctx = new (window.AudioContext||window.webkitAudioContext)());
+    const o=ctx.createOscillator(), g=ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.frequency.setValueAtTime(880,ctx.currentTime);
+    o.frequency.exponentialRampToValueAtTime(1320,ctx.currentTime+.12);
+    g.gain.setValueAtTime(.10,ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.3);
+    o.start(); o.stop(ctx.currentTime+.3);
+  }catch(e){}
+}
+/* 切到别的标签页时，标题栏闪新消息数 */
+const BASE_TITLE=document.title;
+let unread=0;
+function flashTitle(){
+  if(!document.hidden) return;
+  unread++;
+  document.title=`【${unread} 条新回复】电商小二`;
+}
+window.addEventListener('focus',()=>{unread=0;document.title=BASE_TITLE;});
+
+function addMsg(role, text, obj){
+  const div = document.createElement('div');
+  div.className = 'msg ' + (role==='user'?'user':'bot');
+  let inner = `<div class="av">${role==='user'?'🙂':'🛍️'}</div><div class="body">`;
+  // 对象消息 → 渲染成可点击卡片
+  if(obj && obj.id){
+    const isOrder = (obj.type||'').toLowerCase()==='order';
+    if((obj.type||'').toLowerCase()==='choice'){
+      // ⑤ 澄清选项气泡：渲染成可点击按钮
+      const opts=(obj.attributes&&obj.attributes.options)||[];
+      inner += `<div class="choices">${opts.map(o=>`<button type="button" data-opt="${esc(o)}">${esc(o)}</button>`).join('')}</div>`;
+    } else {
+      inner += `<div class="objcard ${isOrder?'order':''}" data-obj-type="${esc(obj.type)}" data-obj-id="${esc(obj.id)}">
+        <div class="ic">${isOrder?'📦':'🛒'}</div>
+        <div><div class="ot">${isOrder?'订单':'商品'}：${esc(obj.title||obj.id)}</div>
+        <div class="od">${objExtraDesc(obj)} · 点击继续咨询</div></div>
+        <div class="go">去咨询 →</div></div>`;
+    }
+  }
+  if(text) inner += `<div class="bubble">${esc(text)}</div>`;
+  // 消息时间戳 + 复制按钮
+  if(text || (obj && obj.id)){
+    inner += `<div class="tsrow" style="display:flex;align-items:center;gap:6px">
+      <span class="ts">${nowTs()}</span>
+      ${text?`<button class="cp" data-copy="${esc(text).replace(/"/g,'&quot;')}">📋 复制</button>`:''}
+    </div>`;
+  }
+  // 机器人消息挂评价按钮
+  if(role!=='user' && text){
+    inner += `<div class="fb"><button data-r="up">👍 有帮助</button><button data-r="down" class="down">👎 没解决</button><span class="thx"></span></div>`;
+  }
+  inner += `</div>`;
+  div.innerHTML = inner;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+  if(role!=='user' && text) attachFb(div, text);
+  // 复制按钮
+  div.querySelectorAll('.cp').forEach(b=>{
+    b.onclick=()=>{
+      navigator.clipboard.writeText(b.dataset.copy||'').then(()=>toast('已复制到剪贴板')).catch(()=>toast('复制失败'));
+    };
+  });
+  // 绑定卡片点击 → 发送对象消息
+  const card = div.querySelector('.objcard');
+  if(card){
+    card.onclick=()=>{
+      send('', {type:card.dataset.objType, id:card.dataset.objId, title:card.querySelector('.ot').textContent.replace(/^[^：]*：/,'')});
+    };
+  }
+  // 绑定澄清选项点击 → 直接发送该选项
+  div.querySelectorAll('.choices button').forEach(b=>{
+    b.onclick=()=>send(b.dataset.opt);
+  });
+  return div;
+}
+/* 卡片副标题：商品卡显示价格/库存 */
+function objExtraDesc(obj){
+  const a = obj.attributes || {};
+  if((obj.type||'').toLowerCase()==='product' && a.price !== undefined){
+    return `¥${a.price} · ${Number(a.stock)>0?('库存 '+a.stock):'缺货'}`;
+  }
+  return '编号 ' + (obj.id||'');
+}
+/* 给机器人消息挂 👍/👎 评价 */
+function attachFb(div, answerText){
+  div.querySelectorAll('.fb button').forEach(b=>{
+    b.onclick=()=>{
+      const rating=b.dataset.r;
+      div.querySelectorAll('.fb button').forEach(x=>x.classList.remove('sel'));
+      b.classList.add('sel');
+      div.querySelector('.thx').textContent = rating==='up'?'收到，太好了！':'收到，我们会改进！';
+      fetch('/api/feedback',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({sender_id:SID,question:lastQuestion,answer:answerText,rating:rating})}).catch(()=>{});
+    };
+  });
+}
+/* 流式打字机的气泡外壳（蓝色光标跟随） */
+function makeBotShell(){
+  const div=document.createElement('div'); div.className='msg bot';
+  div.innerHTML=`<div class="av">🛍️</div><div class="body"><div class="bubble"><span class="cursor"></span></div></div>`;
+  msgs.appendChild(div); msgs.scrollTop=msgs.scrollHeight;
+  const bubble=div.querySelector('.bubble'), cur=div.querySelector('.cursor');
+  return {div, bubble, cur, txt:null};
+}
+/* 流式结束后给气泡挂 时间戳(+耗时)+复制+评价 */
+function finishBot(shell, text, elapsedMs){
+  if(shell.cur) shell.cur.remove();
+  if(!text) return;
+  const body=shell.div.querySelector('.body');
+  const tsrow=document.createElement('div'); tsrow.className='tsrow';
+  tsrow.style.cssText='display:flex;align-items:center;gap:6px';
+  const sec = elapsedMs ? ' · ⏱ ' + (elapsedMs/1000).toFixed(1) + 's' : '';
+  tsrow.innerHTML=`<span class="ts">${nowTs()}${sec}</span>
+    <button class="cp" data-copy="${esc(text).replace(/"/g,'&quot;')}">📋 复制</button>`;
+  body.appendChild(tsrow);
+  tsrow.querySelector('.cp').onclick=(e)=>{
+    navigator.clipboard.writeText(text).then(()=>toast('已复制到剪贴板')).catch(()=>toast('复制失败'));
+  };
+  const row=document.createElement('div'); row.className='fb';
+  row.innerHTML=`<button data-r="up">👍 有帮助</button><button data-r="down" class="down">👎 没解决</button><span class="thx"></span>`;
+  body.appendChild(row); attachFb(shell.div, text);
+}
+/* 首次进来的欢迎引导宫格 */
+function addWelcome(){
+  const div=document.createElement('div'); div.className='msg bot';
+  div.innerHTML=`<div class="av">🛍️</div><div class="body">
+    <div class="bubble">你好，我是电商小二 👋 查订单、办退款、找商品、看政策，一句话的事。先从这里开始？</div>
+    <div class="welcome">
+      <button data-q="我的订单DD2024001到哪了？">📦 查订单物流</button>
+      <button data-q="我要退款">💸 办理退款</button>
+      <button data-q="有没有商品推荐？">🛍️ 找商品</button>
+      <button data-q="多久能发货？">🚚 发货时效</button>
+    </div></div>`;
+  msgs.appendChild(div); msgs.scrollTop=msgs.scrollHeight;
+  div.querySelectorAll('.welcome button').forEach(b=>b.onclick=()=>send(b.dataset.q));
+}
+/* 用户发的图片气泡 */
+function addImgMsg(dataURL){
+  const div=document.createElement('div'); div.className='msg user';
+  div.innerHTML=`<div class="av">🙂</div><div class="body"><div class="bubble"><img src="${dataURL}" alt="图片"/></div></div>`;
+  msgs.appendChild(div); msgs.scrollTop=msgs.scrollHeight;
+}
+function renderHistoryItem(m){
+  const div = document.createElement('div');
+  div.className = 'msg ' + (m.role==='user'?'user':'bot');
+  let inner = `<div class="av">${m.role==='user'?'🙂':'🛍️'}</div><div class="body">`;
+  if(m.object && m.object.id){
+    const isOrder=(m.object.type||'').toLowerCase()==='order';
+    inner += `<div class="objcard ${isOrder?'order':''}"><div class="ic">${isOrder?'📦':'🛒'}</div>
+      <div><div class="ot">${esc(m.object.title||m.object.id)}</div><div class="od">编号 ${esc(m.object.id)}</div></div></div>`;
+  }
+  if(m.text) inner += `<div class="bubble">${esc(m.text)}</div>`;
+  inner += `</div>`;
+  div.innerHTML = inner;
+  msgs.appendChild(div);
+}
+
+let typingEl = null;
+function showTyping(){
+  typingEl = document.createElement('div');
+  typingEl.className = 'msg bot';
+  typingEl.innerHTML = `<div class="av">🛍️</div><div class="body"><div class="bubble"><span class="typing"><i></i><i></i><i></i></span></div></div>`;
+  msgs.appendChild(typingEl);msgs.scrollTop = msgs.scrollHeight;
+}
+function hideTyping(){ if(typingEl){typingEl.remove();typingEl=null;} }
+
+async function loadHistory(){
+  try{
+    const r = await fetch('/api/chat/history?sender_id='+encodeURIComponent(SID));
+    if(!r.ok) return;
+    const d = await r.json();
+    if((d.messages||[]).length){
+      d.messages.forEach(renderHistoryItem);
+    }else{
+      addWelcome();
+    }
+  }catch(e){}
+}
+
+async function send(text, obj){
+  const hasText = !!(text!=null?text:$('input').value).trim();
+  const hasObj = !!(obj && obj.id);
+  if(!hasText && !hasObj) return;
+  const body = {sender_id: SID};
+  if(hasText){ body.text=(text!=null?text:$('input').value).trim(); $('input').value=''; lastQuestion=body.text; addMsg('user', body.text); }
+  else { body.object = obj; lastQuestion = `点击${obj.type==='order'?'订单':'商品'}卡片 ${obj.id}`; addMsg('user', `[${obj.type==='order'?'订单':'商品'}] ${obj.id}`); }
+  $('sendBtn').disabled = true;
+  showTyping();
+  try{
+    await streamReply(body);          // 优先走 SSE 打字机
+  }catch(e){
+    // 流式失败 → 回退一次性接口
+    hideTyping();
+    try{
+      const r = await fetch('/api/chat', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(body)
+      });
+      if(!r.ok){ addMsg('bot','（服务开小差了：'+r.status+'，请稍后再试）'); return; }
+      const d = await r.json();
+      const list = (d.messages||[]);
+      if(!list.length){ addMsg('bot','（我好像没理解你的意思，换个说法试试？）'); return; }
+      ding(); flashTitle();
+      let spoken = [];
+      list.forEach(m=>{
+        addMsg('bot', m.text, m.object);
+        if(m.text) spoken.push(m.text);
+      });
+      if(d.elapsed_ms){
+        const tss=msgs.querySelectorAll('.msg.bot .ts');
+        if(tss.length) tss[tss.length-1].textContent += ' · ⏱ ' + (d.elapsed_ms/1000).toFixed(1) + 's';
+      }
+      fetchProgress();
+      if(speakOn && spoken.length && window.browserSpeak) browserSpeak(spoken.join('，'));
+    }catch(e2){
+      addMsg('bot','（网络异常：'+e2.message+'）');
+    }
+  }finally{
+    $('sendBtn').disabled = false;
+    $('input').focus();
+  }
+}
+
+/* ---------- SSE 流式回复（打字机） ---------- */
+async function streamReply(body){
+  const r = await fetch('/api/chat/stream', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(body)
+  });
+  if(!r.ok || !r.body) throw new Error('HTTP '+r.status);
+  const reader = r.body.getReader();
+  const dec = new TextDecoder();
+  let buf = '', shells = {}, spoken = {}, objList = [], gotAny = false, lastElapsed = null;
+
+  const handle = (ev) => {
+    if(ev.type === 'start'){
+      if(ev.count !== undefined){
+        hideTyping(); gotAny = true;
+        if(!ev.count) addMsg('bot','（我好像没理解你的意思，换个说法试试？）');
+      }
+    } else if(ev.type === 'msg_start'){
+      shells[ev.index] = makeBotShell();
+      if(ev.index===0){ ding(); flashTitle(); }
+    } else if(ev.type === 'delta'){
+      const s = shells[ev.index]; if(!s) return;
+      if(!s.txt){ s.txt = document.createTextNode(''); s.bubble.insertBefore(s.txt, s.cur); }
+      s.txt.data += ev.delta;
+      spoken[ev.index] = s.txt.data;
+      msgs.scrollTop = msgs.scrollHeight;
+    } else if(ev.type === 'msg_end'){
+      const s = shells[ev.index]; if(s) finishBot(s, s.txt ? s.txt.data : '', lastElapsed);
+    } else if(ev.type === 'object'){
+      objList.push(ev.object);
+    } else if(ev.type === 'done'){
+      hideTyping(); gotAny = true;
+      lastElapsed = ev.elapsed_ms || null;
+      objList.forEach(o => addMsg('bot', '', o));
+      fetchProgress();
+      const said = Object.values(spoken).filter(Boolean);
+      if(speakOn && said.length && window.browserSpeak) browserSpeak(said.join('，'));
+      if(window._maybeAskStars) said.forEach(t=>window._maybeAskStars(t));
+    } else if(ev.type === 'error'){
+      hideTyping();
+      addMsg('bot','（出错了：'+(ev.detail||'未知')+'）');
+    }
+  };
+
+  while(true){
+    const {done, value} = await reader.read();
+    if(done) break;
+    buf += dec.decode(value, {stream:true});
+    const parts = buf.split('\n\n');
+    buf = parts.pop();
+    for(let p of parts){
+      p = p.trim();
+      if(!p.startsWith('data:')) continue;
+      try{ handle(JSON.parse(p.slice(5))); }catch(e){}
+    }
+  }
+  if(!gotAny && !Object.keys(shells).length && !objList.length){
+    throw new Error('流式响应为空');
+  }
+}
+$('sendBtn').onclick = ()=>send();
+$('input').addEventListener('keydown', e=>{ if(e.key==='Enter') send(); });
+document.querySelectorAll('.chip').forEach(c=>{
+  c.onclick=()=>{
+    if(c.dataset.obj){ send('', {type:c.dataset.obj, id:'DD2024001', title:'iPhone 15 Pro 订单'}); }
+    else if(c.dataset.transfer !== undefined){ send('转人工'); }
+    else send(c.textContent.trim());
+  };
+});
+
+/* ---------- 图片识别（Qwen-VL） ---------- */
+$('imgBtn').onclick = ()=>$('imgFile').click();
+$('imgFile').onchange = async ()=>{
+  const f = $('imgFile').files[0];
+  $('imgFile').value = '';
+  if(!f) return;
+  if(!f.type.startsWith('image/')){ toast('请选择图片文件'); return; }
+  try{
+    const dataURL = await downscale(f, 800);
+    addImgMsg(dataURL);
+    lastQuestion = '（发了一张图片）';
+    $('sendBtn').disabled = true; showTyping();
+    const r = await fetch('/api/chat/image', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({sender_id:SID, image:dataURL, caption:''})
+    });
+    hideTyping();
+    const d = await r.json();
+    if(!r.ok) throw new Error(d.detail||'识别失败');
+    ding(); flashTitle();
+    addMsg('bot', d.reply);
+    if(speakOn && window.browserSpeak) { try{ browserSpeak(d.reply); }catch(e){} }
+    if(window._maybeAskStars) window._maybeAskStars(d.reply);
+  }catch(e){
+    hideTyping();
+    addMsg('bot','（图片识别失败：'+(e.message||e)+'）');
+  }finally{
+    $('sendBtn').disabled = false;
+  }
+};
+/* 图片压缩：最长边压到 maxSide，转 JPEG base64 */
+function downscale(file, maxSide){
+  return new Promise((res, rej)=>{
+    const img = new Image();
+    img.onload = ()=>{
+      let w = img.width, h = img.height;
+      const k = Math.min(1, maxSide/Math.max(w,h));
+      w = Math.round(w*k); h = Math.round(h*k);
+      const cv = document.createElement('canvas');
+      cv.width = w; cv.height = h;
+      cv.getContext('2d').drawImage(img, 0, 0, w, h);
+      res(cv.toDataURL('image/jpeg', 0.85));
+    };
+    img.onerror = ()=>rej(new Error('图片读取失败'));
+    img.src = URL.createObjectURL(file);
+  });
+}
+
+/* 提示音开关 */
+$('soundToggle').onclick=()=>{
+  soundOn=!soundOn;
+  $('soundToggle').className='mtoggle'+(soundOn?' on':'');
+  $('soundToggle').textContent=soundOn?'🔔 提示音':'🔕 已静音';
+};
+
+/* 朗读开关 */
+$('speakToggle').onclick=()=>{
+  speakOn=!speakOn;
+  $('speakToggle').className='mtoggle'+(speakOn?' on':'');
+  $('speakToggle').textContent=speakOn?'🔊 朗读':'🔇 朗读关';
+};
+
+/* 🌓 深浅主题切换（默认明亮商务，可切深色） */
+if(localStorage.getItem('cs_theme')==='dark') document.body.classList.add('dark');
+$('themeBtn').onclick=()=>{
+  const dark=document.body.classList.toggle('dark');
+  localStorage.setItem('cs_theme', dark?'dark':'light');
+  toast(dark?'已切换到深色主题 🌙':'已切换到明亮主题 ☀️');
+};
+
+/* ---------- 输入实时联想（FAQ） ---------- */
+let FAQ_CACHE=[], sugTimer=null;
+fetch('/api/faq').then(r=>r.json()).then(d=>FAQ_CACHE=d.items||[]).catch(()=>{});
+const sugBox=$('sug');
+function hideSug(){sugBox.classList.remove('show');}
+function renderSug(q){
+  const kw=q.trim().toLowerCase();
+  if(!kw){hideSug();return;}
+  const hits=FAQ_CACHE.filter(f=>
+    f.title.toLowerCase().includes(kw) ||
+    f.keywords.some(k=>k.toLowerCase().includes(kw)) ||
+    f.answer.toLowerCase().includes(kw)
+  ).slice(0,4);
+  if(!hits.length){hideSug();return;}
+  sugBox.innerHTML=hits.map(f=>`<div class="si" data-q="${esc(f.title)}？"><span class="ic">💡</span>${esc(f.title)}</div>`).join('');
+  sugBox.classList.add('show');
+  sugBox.querySelectorAll('.si').forEach(s=>s.onclick=()=>{hideSug();send(s.dataset.q);});
+}
+$('input').addEventListener('input',()=>{
+  clearTimeout(sugTimer);
+  sugTimer=setTimeout(()=>renderSug($('input').value),180);
+});
+document.addEventListener('click',e=>{
+  if(!sugBox.contains(e.target) && e.target!==$('input')) hideSug();
+});
+
+/* ---------- ➕ 新话题 ---------- */
+$('newTopicBtn').onclick=async ()=>{
+  try{
+    await fetch('/api/chat/new-session',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sender_id:SID})});
+  }catch(e){}
+  msgs.innerHTML=''; hideFlowProg(); addWelcome();
+  toast('已开启新话题，历史记录都留着呢');
+};
+
+/* ---------- ⬇ 导出对话记录 ---------- */
+
+/* ---------- 任务流程进度条 ---------- */
+let wasActive=false;
+function hideFlowProg(){$('flowProg').classList.remove('show');}
+function renderProgress(p){
+  const box=$('flowProg');
+  if(!p.active){
+    if(wasActive){ // 流程刚走完 → 短暂展示全绿完成态
+      box.classList.add('show');
+      $('fpTitle').textContent='🎉 流程已完成';
+      $('fpSteps').innerHTML=['发起','办理','完成'].map((s,i)=>
+        `<div class="fp-step done"><span class="dot"></span>${s}</div>`+(i<2?'<div class="fp-line done"></div>':'')
+      ).join('');
+      setTimeout(hideFlowProg,6000);
+    }
+    wasActive=false;
+    return;
+  }
+  wasActive=true;
+  box.classList.add('show');
+  $('fpTitle').textContent=(p.flow_name||'任务')+'进行中';
+  let steps;
+  if(p.flow_id==='refund_request'){
+    steps=[
+      {label:'发起申请',done:true,cur:false},
+      {label:'填订单号',done:p.has_order_number,cur:!p.has_order_number},
+      {label:'填退款原因',done:p.has_refund_reason,cur:p.has_order_number&&!p.has_refund_reason},
+      {label:'提交审核',done:false,cur:p.has_order_number&&p.has_refund_reason},
+    ];
+  }else{
+    steps=[{label:'发起',done:true,cur:false},{label:'办理中',done:false,cur:true},{label:'完成',done:false,cur:false}];
+  }
+  $('fpSteps').innerHTML=steps.map((s,i)=>
+    `<div class="fp-step ${s.done?'done':(s.cur?'cur':'')}"><span class="dot">${s.done?'':(s.cur?(i+1):'')}</span>${s.label}</div>`
+    +(i<steps.length-1?`<div class="fp-line ${s.done?'done':''}"></div>`:'')
+  ).join('');
+}
+async function fetchProgress(){
+  try{
+    const r=await fetch('/api/chat/progress?sender_id='+encodeURIComponent(SID));
+    renderProgress(await r.json());
+  }catch(e){}
+}
+fetchProgress();
+
+/* ---------- 六页签视图调度：对话 / 会话 / 商城 / 帮助 / 设置 / 看板 ---------- */
+let dashLoaded=false, mallLoaded=false, currentView='chatView';
+const VIEWS=['chatView','sessionView','mallView','helpView','setView','dashView'];
+function switchView(name){
+  currentView=name;
+  VIEWS.forEach(v=>{
+    const el=$(v); if(!el) return;
+    const on=(v===name);
+    el.style.display = on ? 'flex' : 'none';
+  });
+  $('navChat').classList.toggle('on',name==='chatView');
+  $('navSessions').classList.toggle('on',name==='sessionView');
+  $('navMall').classList.toggle('on',name==='mallView');
+  $('navHelp').classList.toggle('on',name==='helpView');
+  $('navSet').classList.toggle('on',name==='setView');
+  $('navDash').classList.toggle('on',name==='dashView');
+  if(name==='dashView' && !dashLoaded){ $('dashFrame').src='/admin.html'; dashLoaded=true; }
+  if(name==='sessionView') renderSessionPage();
+  if(name==='setView') syncSetPage();
+  if(name==='mallView' && !mallLoaded){ mallLoaded=true; loadMallOrders(); }
+}
+function setView(dash){ switchView(dash?'dashView':'chatView'); }  // 兼容旧调用
+$('navChat').onclick=()=>switchView('chatView');
+$('navSessions').onclick=()=>switchView('sessionView');
+$('navMall').onclick=()=>switchView('mallView');
+$('navHelp').onclick=()=>switchView('helpView');
+$('navSet').onclick=()=>switchView('setView');
+$('navDash').onclick=()=>switchView('dashView');
+
+/* ---------- 全局刷新（每个页面都可 ↻） ---------- */
+$('refreshBtn').onclick=()=>{
+  if(currentView==='chatView'){
+    try{ fetchProgress(); }catch(e){}
+    toast('对话状态已刷新');
+  }else if(currentView==='sessionView'){
+    renderSessionPage(); toast('历史会话已刷新');
+  }else if(currentView==='mallView'){
+    loadMallOrders(); toast('商城数据已刷新');
+  }else if(currentView==='dashView'){
+    if(dashLoaded){ try{ $('dashFrame').contentWindow.location.reload(); }catch(e){ $('dashFrame').src='/admin.html'; } toast('看板已刷新'); }
+    else { $('dashFrame').src='/admin.html'; dashLoaded=true; toast('看板已加载'); }
+  }else{
+    toast('当前页面已是最新');
+  }
+};
+
+/* ---------- 商城数据页（走内置 Mock 商城 API，真实接口） ---------- */
+const DEMO_ORDERS=['DD2024001','DD2024002','DD2024003'];
+function statusTag(st){
+  if(/已签收/.test(st)) return '<span class="ptag done">'+esc(st)+'</span>';
+  if(/待发货|备货/.test(st)) return '<span class="ptag warn">'+esc(st)+'</span>';
+  return '<span class="ptag ok">'+esc(st)+'</span>';
+}
+async function loadMallOrders(){
+  const box=$('mallOrders'); box.innerHTML='<div style="font-size:12.5px;color:var(--muted)">加载中…</div>';
+  const cards=await Promise.all(DEMO_ORDERS.map(async num=>{
+    try{
+      const d=await (await fetch('/orders/'+num)).json();
+      const o=d.data||{};
+      return '<div class="mcard" data-order="'+esc(num)+'">'
+        +'<div class="mt2">📦 '+esc(num)+' '+statusTag(o.status||'')+'</div>'
+        +'<div class="md2">'+esc(o.product||'')+' · ¥'+(o.amount!=null?o.amount.toFixed(2):'—')+' · '+esc(o.created_at||'')+'</div>'
+        +'</div>';
+    }catch(e){ return ''; }
+  }));
+  box.innerHTML=cards.join('') || '<div style="font-size:12.5px;color:var(--muted)">订单加载失败，点顶部「↻ 刷新」重试</div>';
+  box.querySelectorAll('[data-order]').forEach(el=>{
+    el.onclick=()=>{ $('mallOrderInput').value=el.dataset.order; queryMallOrder('logi'); };
+  });
+}
+function orderCard(o){
+  return '<div class="mcard" style="cursor:default"><div class="mt2">📦 '+esc(o.order_number||'')+' '+statusTag(o.status||'')+'</div>'
+    +'<div class="md2">'+esc(o.product||'')+' · ¥'+(o.amount!=null?o.amount.toFixed(2):'—')+' · 下单时间 '+esc(o.created_at||'')+'</div></div>';
+}
+function logisticsBlock(l){
+  const steps=(l.traces||[]).map(t=>'<div class="logi-step"><span class="lt">'+esc(t.time)+'</span>'+esc(t.desc)+'</div>').join('')
+    || '<div class="logi-step">'+esc(l.logistics_status||'暂无物流轨迹')+'</div>';
+  return '<div class="mcard" style="cursor:default"><div class="mt2">🚚 '+esc(l.logistics_company||'—')+' · '+esc(l.tracking_number||'—')+'</div>'
+    +'<div class="md2">'+statusTag(l.logistics_status||l.status||'')+'</div>'
+    +'<div class="logi">'+steps+'</div></div>';
+}
+async function queryMallOrder(mode){
+  const num=($('mallOrderInput').value||'').trim().toUpperCase();
+  const box=$('mallOrderResult');
+  if(!num){ toast('请先输入订单号'); return; }
+  box.innerHTML='<div style="font-size:12.5px;color:var(--muted)">查询中…</div>';
+  try{
+    if(mode==='order'){
+      const r=await fetch('/orders/'+encodeURIComponent(num));
+      const d=await r.json();
+      if(!r.ok) throw new Error(d.detail||'查询失败');
+      box.innerHTML=orderCard(d.data||{});
+    }else{
+      const r=await fetch('/orders/'+encodeURIComponent(num)+'/logistics');
+      const d=await r.json();
+      if(!r.ok) throw new Error(d.detail||'查询失败');
+      box.innerHTML=logisticsBlock(d.data||{});
+    }
+  }catch(e){ box.innerHTML='<div class="mcard" style="cursor:default"><div class="md2">❌ '+esc(e.message)+'</div></div>'; }
+}
+$('mallOrderBtn').onclick=()=>queryMallOrder('order');
+$('mallLogiBtn').onclick=()=>queryMallOrder('logi');
+$('mallOrderInput').addEventListener('keydown',e=>{ if(e.key==='Enter') queryMallOrder('order'); });
+
+async function mallSearch(){
+  const kw=($('mallSearchInput').value||'').trim();
+  const box=$('mallSearchResult');
+  if(!kw){ toast('请输入商品关键词'); return; }
+  box.innerHTML='<div style="font-size:12.5px;color:var(--muted)">搜索中…</div>';
+  try{
+    const r=await fetch('/products/search?q='+encodeURIComponent(kw));
+    const d=await r.json();
+    const list=(d.data||[]);
+    if(!list.length){ box.innerHTML='<div class="mcard" style="cursor:default"><div class="md2">没有找到「'+esc(kw)+'」相关商品，试试：T恤 / 手机 / 水杯</div></div>'; return; }
+    box.innerHTML=list.map(p=>'<div class="mcard"><div class="mt2">🛒 '+esc(p.title)
+      +(p.status==='在售'?'<span class="ptag ok">在售</span>':'<span class="ptag warn">'+esc(p.status||'')+'</span>')
+      +'</div><div class="md2">¥'+(p.price!=null?p.price.toFixed(2):'—')+' · 库存 '+esc(p.stock!=null?p.stock:'—')
+      +' · '+esc((p.tags||[]).join(' / '))+'</div></div>').join('');
+  }catch(e){ box.innerHTML='<div class="mcard" style="cursor:default"><div class="md2">❌ 搜索失败，请稍后再试</div></div>'; }
+}
+$('mallSearchBtn').onclick=mallSearch;
+$('mallSearchInput').addEventListener('keydown',e=>{ if(e.key==='Enter') mallSearch(); });
+
+/* ---------- 帮助中心：「去试试」直接带话术回对话页 ---------- */
+document.querySelectorAll('.hgo[data-try]').forEach(b=>{
+  b.onclick=()=>{
+    switchView('chatView');
+    $('input').value=b.dataset.try;
+    $('input').focus();
+    toast('话术已填入，点发送即可体验');
+  };
+});
+
+/* 语音输入（Web Speech API，Chrome/Edge 可用） */
+const micBtn=$('micBtn');
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+if(!SR){ micBtn.style.display='none'; }
+else{
+  let rec=null, recOn=false;
+  micBtn.onclick=()=>{
+    if(recOn){ rec.stop(); return; }
+    rec = new SR();
+    rec.lang='zh-CN'; rec.interimResults=false;
+    rec.onstart=()=>{recOn=true;micBtn.classList.add('rec');};
+    rec.onend=()=>{recOn=false;micBtn.classList.remove('rec');};
+    rec.onerror=()=>{recOn=false;micBtn.classList.remove('rec');};
+    rec.onresult=(e)=>{
+      const t=e.results[0][0].transcript;
+      $('input').value=t; send();
+    };
+    rec.start();
+  };
+}
+
+
+loadHistory();
+$('input').focus();
+</script>
+
+<script>
+/* ================= V11 扩展：语音 / 会话列表 / 设置 / 星级评价 / 轮询 ================= */
+
+/* ---------- ① 语音对话（Web Speech API，Chrome/Edge） ---------- */
+let recog=null, recogOn=false;
+$('voiceBtn').onclick=()=>{
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){ toast('当前浏览器不支持语音识别，请用 Chrome / Edge'); return; }
+  if(recogOn){ recogOn=false; try{recog.stop();}catch(e){}
+    $('voiceBtn').classList.remove('on'); $('voiceBtn').textContent='🎤 语音'; return; }
+  recog=new SR(); recog.lang='zh-CN'; recog.continuous=true; recog.interimResults=false;
+  recog.onresult=e=>{
+    const t=e.results[e.results.length-1][0].transcript.trim();
+    if(t){ toast('🎤 识别：'+t); send(t); }
+  };
+  recog.onend=()=>{ if(recogOn){ try{recog.start();}catch(e){} } };
+  recog.onerror=e=>{
+    if(e.error==='not-allowed'||e.error==='service-not-allowed'){
+      recogOn=false; $('voiceBtn').classList.remove('on'); $('voiceBtn').textContent='🎤 语音';
+      toast('麦克风权限被拒绝，请在浏览器地址栏允许麦克风');
+    }
+  };
+  recogOn=true; $('voiceBtn').classList.add('on'); $('voiceBtn').textContent='🔴 停止语音';
+  try{ recog.start(); toast('语音已开启，直接说话即可发送 🎤'); }catch(e){}
+};
+
+/* ---------- ④ 历史会话页（顶部「🕘 会话」页签） ---------- */
+async function renderSessionPage(){
+  let d;
+  try{ d=await (await fetch('/api/chat/sessions?sender_id='+encodeURIComponent(SID))).json(); }
+  catch(e){ toast('会话列表加载失败'); return; }
+  const list=(d.sessions||[]);
+  const box=$('sessionList'), empty=$('sessionEmpty');
+  box.innerHTML='';
+  empty.style.display=list.length?'none':'block';
+  list.forEach(sinfo=>{
+    const el=document.createElement('div');
+    el.style.cssText='padding:12px 16px;border-radius:14px;border:1px solid '
+      +(sinfo.current?'#1fc2a7':'var(--hairline)')+';cursor:pointer;background:'
+      +(sinfo.current?'rgba(31,194,167,.12)':'var(--surface-2)');
+    el.innerHTML='<div style="font-size:13.5px;font-weight:600;color:var(--txt)">'+esc(sinfo.summary)+'</div>'
+      +'<div style="font-size:12px;color:var(--muted);margin-top:4px">'
+      +(sinfo.current?'📍 当前会话 · ':'')+sinfo.turns+' 轮对话</div>';
+    el.onclick=async ()=>{
+      try{
+        const r=await fetch('/api/chat/session-messages?sender_id='+encodeURIComponent(SID)
+          +'&session_id='+encodeURIComponent(sinfo.session_id));
+        const d2=await r.json();
+        $('msgs').innerHTML='';
+        (d2.messages||[]).forEach(m=>addMsg(m.role==='user'?'user':'bot', m.text||'', m.object||null));
+        $('msgs').scrollTop=$('msgs').scrollHeight;
+        switchView('chatView');
+        toast('已切换到历史会话（只读回看）');
+      }catch(e){ toast('会话消息加载失败'); }
+    };
+    box.appendChild(el);
+  });
+};
+
+/* ---------- ⑦ 设置页（顶部「⚙️ 设置」页签） ---------- */
+function syncSetPage(){
+  $('setSound').checked=soundOn;
+  $('setSpeak').checked=speakOn;
+  $('rateSlider2').value=localStorage.getItem('cs_tts_rate')||'1';
+  $('volSlider2').value=localStorage.getItem('cs_tts_vol')||'1';
+  $('rateV2').textContent=parseFloat($('rateSlider2').value).toFixed(1)+'x';
+  $('volV2').textContent=Math.round(parseFloat($('volSlider2').value)*100)+'%';
+}
+$('setSound').onchange=()=>{
+  soundOn=$('setSound').checked;
+  $('soundToggle').className='mtoggle'+(soundOn?' on':'');
+  $('soundToggle').textContent=soundOn?'🔔 提示音':'🔕 已静音';
+};
+$('setSpeak').onchange=()=>{
+  speakOn=$('setSpeak').checked;
+  $('speakToggle').className='mtoggle'+(speakOn?' on':'');
+  $('speakToggle').textContent=speakOn?'🔊 朗读':'🔇 朗读关';
+  if(!speakOn){ try{speechSynthesis.cancel();}catch(e){} }
+};
+$('rateSlider2').oninput=()=>{
+  $('rateV2').textContent=parseFloat($('rateSlider2').value).toFixed(1)+'x';
+  localStorage.setItem('cs_tts_rate', $('rateSlider2').value);
+};
+$('volSlider2').oninput=()=>{
+  $('volV2').textContent=Math.round(parseFloat($('volSlider2').value)*100)+'%';
+  localStorage.setItem('cs_tts_vol', $('volSlider2').value);
+};
+$('exportBtn2').onclick=()=>{
+  const rows=[...document.querySelectorAll('#msgs .msg')].map(div=>{
+    const isUser=div.className.includes('user');
+    const t=div.querySelector('.bubble');
+    return (isUser?'【我】':'【客服小二】')+' '+(t?t.textContent:'（卡片消息）');
+  });
+  const head='电商小二 · 对话记录导出\n导出时间：'+new Date().toLocaleString()+'\n'+'—'.repeat(24)+'\n\n';
+  const blob=new Blob([head+rows.join('\n\n')],{type:'text/plain;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='电商小二-对话记录-'+new Date().toISOString().slice(0,10)+'.txt';
+  a.click(); toast('已导出对话记录 📤');
+};
+/* 浏览器 TTS：包装 speakToggle 行为 */
+(function(){
+  const origSpeakText=(text)=>{
+    const rate=parseFloat(localStorage.getItem('cs_tts_rate')||'1');
+    const vol=parseFloat(localStorage.getItem('cs_tts_vol')||'1');
+    try{
+      const u=new SpeechSynthesisUtterance(text);
+      u.lang='zh-CN'; u.rate=rate; u.volume=vol;
+      speechSynthesis.speak(u);
+    }catch(e){}
+  };
+  window.browserSpeak=origSpeakText;
+})();
+
+/* ---------- ⑥ 满意度星级（告别小结后弹出） ---------- */
+function showStars(){
+  const old=document.getElementById('starFloat'); if(old) return;
+  let picked=0;
+  const fl=document.createElement('div');
+  fl.id='starFloat';
+  fl.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:85;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)';
+  fl.innerHTML='<div style="width:min(380px,92vw);border-radius:18px;padding:24px;text-align:center;'
+    +'background:var(--surface);border:1px solid var(--hairline);box-shadow:var(--shadow)">'
+    +'<div style="font-size:34px;margin-bottom:6px">🎉</div>'
+    +'<div style="font-weight:800;font-size:15px;color:var(--txt);margin-bottom:10px">本次服务还满意吗？</div>'
+    +'<div id="starRow" style="font-size:30px;cursor:pointer;letter-spacing:6px;margin-bottom:12px">'
+    +'<span data-s="1">☆</span><span data-s="2">☆</span><span data-s="3">☆</span><span data-s="4">☆</span><span data-s="5">☆</span></div>'
+    +'<input id="starCmt" placeholder="一句话反馈（可选）" style="width:100%;box-sizing:border-box;border:1px solid var(--hairline);'
+    +'border-radius:12px;padding:11px 12px;background:var(--surface-2);color:var(--txt);font-family:inherit;margin-bottom:12px" />'
+    +'<div style="display:flex;gap:8px">'
+    +'<button id="starSkip" style="flex:1;border:1px solid var(--hairline);border-radius:12px;padding:11px;'
+    +'background:var(--surface-2);color:var(--txt);font-family:inherit;cursor:pointer">下次再说</button>'
+    +'<button id="starGo" style="flex:1;border:0;border-radius:12px;padding:11px;background:var(--grad);'
+    +'color:#fff;font-weight:700;font-family:inherit;cursor:pointer">提交评价</button></div></div>';
+  document.body.appendChild(fl);
+  const row=fl.querySelector('#starRow');
+  row.querySelectorAll('span').forEach(st=>{
+    st.onclick=()=>{
+      picked=parseInt(st.dataset.s);
+      row.querySelectorAll('span').forEach(x=>x.textContent=(parseInt(x.dataset.s)<=picked)?'⭐':'☆');
+    };
+  });
+  fl.querySelector('#starSkip').onclick=()=>fl.remove();
+  fl.querySelector('#starGo').onclick=async ()=>{
+    if(!picked){ toast('请先点亮星星 ⭐'); return; }
+    try{
+      await fetch('/api/feedback',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({sender_id:SID, question:'（会话满意度评价）', answer:'',
+          rating:picked>=4?'up':'down', comment:fl.querySelector('#starCmt').value||'', stars:picked})});
+      toast('感谢您的评价！星级：'+picked+' ⭐');
+    }catch(e){ toast('提交失败，稍后再试'); }
+    fl.remove();
+  };
+  fl.onclick=e=>{ if(e.target===fl) fl.remove(); };
+}
+/* 挂钩：收到告别小结后 1.2s 弹出星级（在 streamReply 与普通回复处由下方包装函数触发） */
+window._maybeAskStars=function(text){
+  if(text && text.includes('本次对话小结')) setTimeout(showStars, 1200);
+};
+
+/* ---------- ⑤ 用户端轮询：接收人工接管回复（只渲染人工消息，指纹去重） ---------- */
+const seenAgent=new Set();
+async function pollLoop(){
+  try{
+    const r=await fetch('/api/chat/poll?sender_id='+encodeURIComponent(SID)+'&after=0');
+    const d=await r.json();
+    for(const m of (d.messages||[])){
+      if(m.role!=='bot' || !m.text || !m.text.startsWith('👤 人工客服：')) continue;
+      const fp=m.text+'|'+(m.object?JSON.stringify(m.object):'');
+      if(seenAgent.has(fp)) continue;
+      seenAgent.add(fp);
+      addMsg('bot', m.text||'', m.object||null);
+      $('msgs').scrollTop=$('msgs').scrollHeight;
+      if(speakOn && window.browserSpeak) { try{ browserSpeak(m.text); }catch(e){} }
+    }
+  }catch(e){ /* 静默 */ }
+}
+setInterval(pollLoop, 8000);
+setTimeout(pollLoop, 3000);
+
+/* ---------- ② 真流式提示：SSE 现在是 token 级，无需前端改动 ---------- */
+
+</script>
+<script src="/cat.js"></script>
+</body>
+</html>

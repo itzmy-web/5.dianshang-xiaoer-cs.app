@@ -1,0 +1,19 @@
+# 电商小二 · 智能客服（一键编排）
+# 用法：docker compose up -d --build  →  http://localhost:18082
+services:
+  ecom-cs:
+    build: .
+    container_name: ecom-cs
+    ports:
+      - "18082:18082"
+    env_file:
+      - .env
+    environment:
+      # sqlite 落到挂载卷里，容器重建数据不丢
+      DATABASE_URL: sqlite+aiosqlite:////app/data/customer_service.db
+    volumes:
+      - cs-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  cs-data:

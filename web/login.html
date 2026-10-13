@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>电商小二 · 登录</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛍️</text></svg>">
+<style>
+  :root{
+    --bg:#edf4f1; --surface:#ffffff; --surface-2:#f2f7f5;
+    --hairline:rgba(35,43,58,.10);
+    --txt:#232b3a; --sub:#6b7686; --muted:#9aa4b0;
+    --navy:#252e3d; --navy-2:#2b3546;
+    --teal:#1fc2a7; --teal-deep:#12a88d; --teal-soft:rgba(31,194,167,.12);
+    --grad:linear-gradient(135deg,#25d0b2 0%,#12a88d 100%);
+    --acc:#12a88d; --radius:22px; --shadow:0 24px 60px rgba(35,60,55,.14);
+    --font:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","PingFang SC","Helvetica Neue","Microsoft YaHei",sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{font-family:var(--font);color:var(--txt);background:var(--bg);
+    -webkit-font-smoothing:antialiased;min-height:100vh}
+  ::selection{background:rgba(31,194,167,.30)}
+  .app{display:grid;grid-template-columns:1.05fr .95fr;min-height:100vh}
+
+  /* ============ 左：参考图 1 风格（浅底 + 深藏蓝品牌面板 + 漂浮装饰） ============ */
+  .hero{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;
+    padding:48px 44px;isolation:isolate;
+    background:linear-gradient(160deg,#eef6f3 0%,#e6f1ec 55%,#dcebe6 100%)}
+  /* 漂浮小卡片（图标 + 灰条） */
+  .dcard{position:absolute;display:flex;align-items:center;gap:10px;background:#fff;
+    border-radius:14px;padding:10px 14px;box-shadow:0 12px 30px rgba(35,60,55,.10);z-index:1}
+  .dcard .dic{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;flex:none;
+    color:#fff;font-size:14px}
+  .dcard .dlines{display:flex;flex-direction:column;gap:5px}
+  .dcard .dlines i{display:block;height:6px;border-radius:3px;background:#e3e9e7}
+  .dcard .dlines i:first-child{width:96px;background:#d3dedb}
+  .dcard .dlines i:last-child{width:64px}
+  .dcard.dc1{top:7%;left:9%;animation:floaty 7s ease-in-out infinite alternate}
+  .dcard.dc1 .dic{background:var(--teal)}
+  .dcard.dc2{top:12%;right:8%;animation:floaty 8.5s ease-in-out infinite alternate-reverse}
+  .dcard.dc2 .dic{background:#3aa0c8}
+  .dcard.dc3{bottom:9%;left:14%;animation:floaty 9s ease-in-out infinite alternate}
+  .dcard.dc3 .dic{background:#f0b13e}
+  .dcard.dc4{bottom:13%;right:10%;animation:floaty 7.8s ease-in-out infinite alternate-reverse}
+  .dcard.dc4 .dic{background:var(--teal)}
+  @keyframes floaty{from{transform:translateY(0)}to{transform:translateY(-14px)}}
+  /* 青绿圆点 + 虚线 */
+  .ddot{position:absolute;border-radius:50%;background:var(--teal);opacity:.85;z-index:1}
+  .ddot.s1{width:12px;height:12px;top:30%;left:6%}
+  .ddot.s2{width:8px;height:8px;top:22%;right:26%;opacity:.55}
+  .ddot.s3{width:16px;height:16px;bottom:26%;right:5%;opacity:.45}
+  .ddot.s4{width:9px;height:9px;bottom:36%;left:4%;opacity:.6}
+  .ddot.s5{width:10px;height:10px;top:56%;right:16%;opacity:.5}
+  .dline{position:absolute;border-top:2px dashed rgba(31,194,167,.35);z-index:0}
+  .dline.l1{width:150px;top:26%;left:12%;transform:rotate(24deg)}
+  .dline.l2{width:130px;bottom:22%;right:14%;transform:rotate(-18deg)}
+  .dline.l3{width:110px;top:48%;left:2%;transform:rotate(48deg);opacity:.7}
+  /* 头像圆 */
+  .dav{position:absolute;width:52px;height:52px;border-radius:50%;background:#fff;display:grid;
+    place-items:center;font-size:24px;box-shadow:0 12px 28px rgba(35,60,55,.12);z-index:1}
+  .dav.v1{bottom:22%;left:7%}
+  .dav.v2{top:14%;right:24%;width:44px;height:44px;font-size:20px;opacity:.9}
+
+  /* 深藏蓝品牌面板 */
+  .brand-panel{position:relative;z-index:2;width:min(560px,92%);border-radius:44px;
+    padding:clamp(40px,5vw,72px) clamp(32px,4vw,60px);
+    background:linear-gradient(150deg,#2c3648 0%,#232b3a 60%,#1e2531 100%);
+    box-shadow:0 40px 90px rgba(30,42,54,.35)}
+  .brand-panel::after{content:"";position:absolute;left:8%;bottom:0;width:55%;height:42%;
+    background-image:radial-gradient(rgba(255,255,255,.10) 1.6px,transparent 1.6px);
+    background-size:17px 17px;
+    -webkit-mask-image:linear-gradient(45deg,#000 20%,transparent 80%);
+    mask-image:linear-gradient(45deg,#000 20%,transparent 80%);
+    pointer-events:none}
+  .check-badge{position:absolute;top:-16px;right:36px;width:52px;height:52px;border-radius:50%;
+    background:var(--grad);display:grid;place-items:center;color:#fff;font-size:24px;font-weight:800;
+    box-shadow:0 14px 30px rgba(31,194,167,.45)}
+  .brand-panel h1{margin:0 0 12px;font-size:clamp(34px,3.6vw,48px);font-weight:800;
+    letter-spacing:.02em;color:#fff}
+  .brand-panel .bp-sub{margin:0 0 26px;font-size:15.5px;color:rgba(255,255,255,.78);letter-spacing:.04em}
+  .bp-pills{display:flex;gap:10px;flex-wrap:wrap;position:relative;z-index:1}
+  .bp-pills span{font-size:13px;padding:8px 16px;border-radius:999px;letter-spacing:.03em;cursor:pointer;
+    transition:.2s;user-select:none}
+  .bp-pills span:hover{transform:translateY(-2px)}
+  .bp-pills .p1{background:var(--teal);color:#fff;font-weight:600;box-shadow:0 8px 20px rgba(31,194,167,.35)}
+  .bp-pills .p1:hover{filter:brightness(1.1)}
+  .bp-pills .p2,.bp-pills .p3{border:1px solid rgba(255,255,255,.35);color:rgba(255,255,255,.88)}
+  .bp-pills .p2:hover,.bp-pills .p3:hover{border-color:var(--teal);color:#fff;background:rgba(255,255,255,.08)}
+  .pills-hint{font-size:11px;color:rgba(255,255,255,.40);margin-top:10px;letter-spacing:.04em}
+
+  /* 功能介绍弹层（点胶囊打开） */
+  .feat-modal{position:fixed;inset:0;background:rgba(35,43,58,.55);backdrop-filter:blur(6px);
+    display:none;align-items:center;justify-content:center;z-index:92;padding:20px}
+  .feat-modal.show{display:flex}
+  .feat-card{width:min(620px,94vw);max-height:82vh;overflow:auto;border-radius:22px;background:#fff;
+    box-shadow:0 40px 90px rgba(30,42,54,.40);padding:26px 26px 22px}
+  .feat-head{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+  .feat-badge{width:52px;height:52px;border-radius:15px;display:grid;place-items:center;flex:none;
+    font-size:25px;background:var(--teal-soft);border:1px solid rgba(31,194,167,.35)}
+  .feat-head h3{margin:0;font-size:20px;color:var(--txt)}
+  .feat-head .fsub{font-size:12.5px;color:var(--muted);margin-top:3px}
+  .feat-desc{font-size:13.5px;color:var(--sub);line-height:1.85;margin:0 0 14px}
+  .feat-desc b{color:var(--teal-deep)}
+  .feat-tags{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+  .feat-tags span{font-size:12px;color:var(--teal-deep);background:var(--teal-soft);
+    border:1px solid rgba(31,194,167,.30);border-radius:999px;padding:5px 12px}
+  .feat-demo{background:var(--surface-2);border:1px solid var(--hairline);border-radius:16px;
+    padding:14px;display:flex;flex-direction:column;gap:8px;margin-bottom:18px}
+  .feat-demo .fdt{font-size:11px;letter-spacing:.12em;color:var(--muted);margin-bottom:2px}
+  .fm{max-width:86%;font-size:13px;line-height:1.7;padding:9px 13px;border-radius:13px}
+  .fm.q{align-self:flex-end;background:var(--navy);color:#fff;border-bottom-right-radius:4px;font-weight:600}
+  .fm.a{align-self:flex-start;background:#fff;border:1px solid var(--hairline);border-bottom-left-radius:4px}
+  .fm.kpis{align-self:stretch;background:#fff;border:1px solid var(--hairline);display:grid;
+    grid-template-columns:repeat(3,1fr);gap:8px;max-width:100%}
+  .fm.kpis .kv{font-size:16px;font-weight:800;color:var(--teal-deep)}
+  .fm.kpis .kk{font-size:10.5px;color:var(--muted);margin-top:2px}
+  .feat-close{width:100%;border:0;border-radius:12px;padding:13px;font-size:14px;font-weight:700;
+    cursor:pointer;font-family:inherit;background:var(--navy);color:#fff;transition:.2s}
+  .feat-close:hover{background:#2e3a4d}
+  /* 面板左缘的气泡卡（勾 + 灰条） */
+  .edge-card{position:absolute;left:-56px;bottom:44px;display:flex;align-items:center;gap:9px;
+    background:var(--teal);color:#fff;border-radius:14px;padding:11px 14px;
+    box-shadow:0 16px 36px rgba(31,194,167,.40);z-index:3}
+  .edge-card .ec-ic{font-size:16px;font-weight:800}
+  .edge-card .ec-lines{display:flex;flex-direction:column;gap:5px}
+  .edge-card .ec-lines i{display:block;height:6px;border-radius:3px;background:rgba(255,255,255,.55)}
+  .edge-card .ec-lines i:first-child{width:84px;background:rgba(255,255,255,.9)}
+  .edge-card .ec-lines i:last-child{width:56px}
+  @media (max-width:1200px){.edge-card{display:none}}
+
+  /* 实时对话演示（面板内） */
+  .demo-box{margin-top:26px;position:relative;z-index:1;background:rgba(255,255,255,.06);
+    border:1px solid rgba(255,255,255,.14);border-radius:16px;padding:12px 14px}
+  .demo-head{display:flex;align-items:center;gap:7px;font-size:11px;letter-spacing:.12em;
+    color:rgba(255,255,255,.55);margin-bottom:10px}
+  .demo-head .live{width:7px;height:7px;border-radius:50%;background:var(--teal);
+    box-shadow:0 0 10px var(--teal);animation:pulseDot 1.6s ease-in-out infinite}
+  @keyframes pulseDot{0%,100%{opacity:1}50%{opacity:.35}}
+  .demo-msgs{display:flex;flex-direction:column;gap:8px;min-height:74px}
+  .dm{max-width:88%;font-size:12.8px;line-height:1.65;padding:8px 12px;border-radius:12px;min-height:20px}
+  .dm.q{align-self:flex-end;background:var(--teal);color:#fff;border-bottom-right-radius:4px;font-weight:600}
+  .dm.a{align-self:flex-start;background:rgba(255,255,255,.12);color:rgba(255,255,255,.92);border-bottom-left-radius:4px}
+  .dm .tc{display:inline-block;width:2px;height:12px;background:var(--teal);vertical-align:-1px;
+    margin-left:2px;animation:blinkT .8s infinite}
+  @keyframes blinkT{0%,100%{opacity:1}50%{opacity:0}}
+
+  /* 真实服务数据条（面板下方） */
+  .stats-bar{display:flex;gap:0;width:min(560px,92%);margin-top:20px;background:rgba(255,255,255,.75);
+    backdrop-filter:blur(10px);border:1px solid rgba(35,43,58,.08);border-radius:18px;overflow:hidden;
+    box-shadow:0 14px 34px rgba(35,60,55,.08);position:relative;z-index:2}
+  .sb-item{flex:1;text-align:center;padding:14px 6px 12px;position:relative}
+  .sb-item+.sb-item::before{content:"";position:absolute;left:0;top:24%;bottom:24%;width:1px;background:rgba(35,43,58,.10)}
+  .sb-item .sv{font-size:clamp(18px,1.8vw,24px);font-weight:800;color:var(--teal-deep);font-variant-numeric:tabular-nums}
+  .sb-item .sk{font-size:10.5px;color:var(--sub);margin-top:3px;letter-spacing:.05em}
+  .hero-foot{position:relative;z-index:2;margin-top:18px;font-size:11.5px;color:rgba(35,43,58,.45);text-align:center}
+  .hero-foot b{color:rgba(35,43,58,.62);font-weight:600}
+
+  /* 右侧：公告 + 服务状态 */
+  .announce{display:flex;align-items:flex-start;gap:8px;font-size:12.5px;color:var(--teal-deep);
+    background:var(--teal-soft);border:1px solid rgba(31,194,167,.30);border-radius:12px;
+    padding:10px 12px;margin-bottom:16px;line-height:1.65}
+  .srvline{display:flex;align-items:center;gap:14px;font-size:12px;color:var(--sub);
+    margin:-8px 0 18px;flex-wrap:wrap}
+  .srvline .st{display:inline-flex;align-items:center;gap:6px}
+  .srvline .st b{color:var(--txt);font-variant-numeric:tabular-nums}
+  .srvline .sdot{width:7px;height:7px;border-radius:50%;background:var(--teal);box-shadow:0 0 8px rgba(31,194,167,.7)}
+
+  /* ============ 右：登录卡片（功能不变，配色对齐左侧） ============ */
+  .auth{display:flex;align-items:center;justify-content:center;padding:40px 28px;position:relative;
+    background:linear-gradient(200deg,#eef6f3 0%,#e4f0eb 100%)}
+  .auth .adot{position:absolute;border-radius:50%;background:var(--teal);opacity:.35}
+  .auth .adot.a1{width:10px;height:10px;top:9%;right:14%}
+  .auth .adot.a2{width:14px;height:14px;bottom:10%;left:10%;opacity:.25}
+  .box{width:100%;max-width:410px;background:var(--surface);border:1px solid var(--hairline);
+    border-radius:26px;padding:36px 34px;box-shadow:var(--shadow);position:relative;z-index:1}
+  .box h2{margin:0 0 8px;font-size:23px;font-weight:800;letter-spacing:-.01em;color:var(--txt);text-align:center}
+  .box .sub{color:var(--sub);font-size:13px;margin-bottom:22px;text-align:center}
+  .tabs{display:flex;gap:4px;background:var(--surface-2);border-radius:13px;padding:4px;margin-bottom:20px}
+  .tabs button{flex:1;border:0;background:transparent;color:var(--sub);padding:11px 6px;border-radius:10px;
+    font-size:13.5px;font-weight:500;cursor:pointer;transition:.2s;font-family:inherit;white-space:nowrap}
+  .tabs button.on{background:var(--navy);color:#fff;font-weight:600;box-shadow:0 6px 16px rgba(35,43,58,.35)}
+  .pane{display:none}.pane.on{display:block;animation:fade .35s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .field{margin-bottom:15px}
+  .field label{display:block;font-size:12px;color:var(--sub);margin-bottom:8px}
+  .ctl{display:flex;align-items:center;background:#f6f9f8;border:1px solid var(--hairline);
+    border-radius:12px;padding:0 14px;transition:.2s}
+  .ctl:focus-within{border-color:var(--teal);box-shadow:0 0 0 4px rgba(31,194,167,.16)}
+  .ctl .pre{color:var(--sub);font-size:15px;padding-right:12px}
+  .ctl input{flex:1;min-width:0;border:0;background:transparent;color:var(--txt);font-size:15px;padding:14px 0;outline:none;font-family:inherit}
+  .ctl input::placeholder{color:var(--muted)}
+  .codectl{gap:10px}
+  .codebtn{flex:none;border:0;background:var(--teal-soft);color:var(--teal-deep);border:1px solid rgba(31,194,167,.45);
+    border-radius:9px;padding:8px 12px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;transition:.2s}
+  .codebtn:hover:not(:disabled){background:rgba(31,194,167,.24)}
+  .codebtn:disabled{opacity:.55;cursor:not-allowed}
+  .btn{width:100%;border:0;border-radius:12px;padding:15px;font-size:15px;font-weight:700;cursor:pointer;
+    background:var(--navy);color:#fff;transition:.2s;font-family:inherit;box-shadow:0 12px 28px rgba(35,43,58,.32)}
+  .btn:hover{background:#2e3a4d;transform:translateY(-1px)}
+  .btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+  .ghostbtn{width:100%;margin-top:14px;border:1.5px dashed rgba(31,194,167,.55);border-radius:12px;padding:13px;
+    font-size:14px;font-weight:700;cursor:pointer;background:var(--teal-soft);color:var(--teal-deep);
+    transition:.2s;font-family:inherit}
+  .ghostbtn:hover{background:rgba(31,194,167,.20);border-style:solid}
+  .meta-tip{font-size:12px;color:var(--muted);margin-top:10px;line-height:1.6;text-align:center}
+
+  /* 用户协议勾选行 */
+  .agree{display:flex;gap:10px;align-items:flex-start;margin:16px 2px 0;font-size:13px;
+    color:var(--sub);line-height:1.75;cursor:pointer;user-select:none}
+  .agree input{display:none}
+  .agree .abox{flex:0 0 20px;width:20px;height:20px;margin-top:3px;border-radius:6px;
+    border:1.5px solid rgba(31,194,167,.55);background:var(--teal-soft);
+    display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;
+    color:transparent;transition:.15s}
+  .agree input:checked + .abox{background:var(--teal);border-color:var(--teal);color:#fff;
+    box-shadow:0 0 12px rgba(31,194,167,.40)}
+  .agree .atx a{color:var(--teal-deep);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+  .agree .atx a:hover{color:#0d8a73}
+
+  /* 协议弹窗 */
+  .legal{position:fixed;inset:0;background:rgba(35,43,58,.45);backdrop-filter:blur(6px);
+    display:none;align-items:center;justify-content:center;z-index:90;padding:20px}
+  .legal.show{display:flex}
+  .legal .lcard{width:min(560px,94vw);max-height:78vh;overflow:auto;border-radius:20px;
+    background:var(--surface);border:1px solid var(--hairline);box-shadow:var(--shadow);padding:26px 26px 22px}
+  .legal h3{margin:0 0 14px;font-size:18px;color:var(--txt)}
+  .legal .lbody{font-size:13.5px;color:var(--sub);line-height:1.9;white-space:pre-wrap}
+  .legal .lclose{margin-top:18px;width:100%;border:0;border-radius:12px;padding:12px;font-size:14px;
+    font-weight:700;cursor:pointer;font-family:inherit;background:var(--navy);color:#fff}
+  .codehint{font-size:12px;color:var(--teal-deep);background:var(--teal-soft);border:1px solid rgba(31,194,167,.35);
+    border-radius:10px;padding:9px 12px;margin-top:12px;display:none;line-height:1.6}
+  .codehint.show{display:block}
+  .err{display:none;font-size:12px;color:#d64c3f;margin-top:7px;line-height:1.5}
+  .err.show{display:block}
+  .ctl.shake{animation:shake .4s}
+  @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}50%{transform:translateX(6px)}75%{transform:translateX(-4px)}}
+
+  /* 扫码区 */
+  .qrwrap{display:flex;flex-direction:column;align-items:center}
+  .qrbox{position:relative;width:216px;height:216px;border-radius:18px;background:#fff;
+    padding:12px;box-shadow:0 16px 40px rgba(35,60,55,.16);margin-bottom:16px;border:1px solid var(--hairline)}
+  .qrbox canvas{display:block;width:100%;height:100%;border-radius:8px}
+  .scanline{position:absolute;left:8px;right:8px;height:3px;border-radius:3px;
+    background:linear-gradient(90deg,transparent,#1fc2a7 30%,#12a88d 70%,transparent);
+    box-shadow:0 0 14px rgba(31,194,167,.8);animation:scan 2.2s ease-in-out infinite alternate;top:10px}
+  @keyframes scan{from{top:10px}to{top:calc(100% - 13px)}}
+  .qrmask{position:absolute;inset:0;border-radius:18px;background:rgba(35,43,58,.88);display:none;
+    flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#fff;font-size:13px;z-index:2}
+  .qrmask.show{display:flex}
+  .qrmask .big{font-size:30px}
+  .qrmask button{border:0;border-radius:10px;padding:8px 18px;font-size:13px;font-weight:700;cursor:pointer;
+    font-family:inherit;background:var(--teal);color:#fff}
+  .qrbrand{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:44px;height:44px;
+    border-radius:11px;display:grid;place-items:center;font-size:24px;background:#fff;
+    box-shadow:0 4px 14px rgba(35,43,58,.18);border:1px solid rgba(35,43,58,.08);z-index:1}
+  .qrtip{font-size:12.5px;color:var(--sub);text-align:center;line-height:1.7;margin-bottom:14px}
+  .qracts{display:flex;gap:10px;width:100%}
+  .qracts button{flex:1;border-radius:12px;padding:12px;font-size:13.5px;font-weight:600;cursor:pointer;
+    font-family:inherit;transition:.2s}
+  .qrefresh{border:1px solid var(--hairline);background:var(--surface-2);color:var(--txt)}
+  .qrefresh:hover{background:rgba(35,43,58,.06)}
+  .qsim{border:0;background:rgba(52,199,89,.14);color:#1f9d4d;border:1px solid rgba(52,199,89,.40)}
+  .qsim:hover{background:rgba(52,199,89,.24)}
+  .wxmark{color:#07c160}
+  .alimark{color:#1677ff}
+  .toast{position:fixed;left:50%;bottom:34px;transform:translateX(-50%) translateY(20px);
+    background:rgba(35,43,58,.92);border:1px solid rgba(255,255,255,.12);color:#fff;padding:13px 22px;border-radius:14px;
+    font-size:13px;box-shadow:var(--shadow);opacity:0;transition:.25s;pointer-events:none;z-index:70;backdrop-filter:blur(20px)}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  @media (max-width:880px){.app{grid-template-columns:1fr}.hero{display:none}.auth{padding:30px 18px}}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- 左：品牌舞台（参考图 1 风格） -->
+  <section class="hero">
+    <div class="dcard dc1"><div class="dic">💬</div><div class="dlines"><i></i><i></i></div></div>
+    <div class="dcard dc2"><div class="dic">👤</div><div class="dlines"><i></i><i></i></div></div>
+    <div class="dcard dc3"><div class="dic">🧾</div><div class="dlines"><i></i><i></i></div></div>
+    <div class="dcard dc4"><div class="dic">✅</div><div class="dlines"><i></i><i></i></div></div>
+    <div class="ddot s1"></div><div class="ddot s2"></div><div class="ddot s3"></div>
+    <div class="ddot s4"></div><div class="ddot s5"></div>
+    <div class="dline l1"></div><div class="dline l2"></div><div class="dline l3"></div>
+    <div class="dav v1">🧑‍💼</div>
+    <div class="dav v2">🎧</div>
+
+    <div class="brand-panel">
+      <div class="check-badge">✓</div>
+      <h1>电商小二</h1>
+      <p class="bp-sub">智能客服与工单协作平台</p>
+      <div class="bp-pills">
+        <span class="p1" data-feat="ans" title="点击查看功能介绍">智能应答</span>
+        <span class="p2" data-feat="flow" title="点击查看功能介绍">工单流转</span>
+        <span class="p3" data-feat="insight" title="点击查看功能介绍">客户洞察</span>
+      </div>
+      <div class="pills-hint">☝ 点击标签查看功能介绍与示例</div>
+      <div class="demo-box">
+        <div class="demo-head"><span class="live"></span>REALTIME DEMO · 实时对话演示</div>
+        <div class="demo-msgs">
+          <div class="dm q" id="dmQ"></div>
+          <div class="dm a" id="dmA"></div>
+        </div>
+      </div>
+      <div class="edge-card">
+        <span class="ec-ic">✓</span>
+        <div class="ec-lines"><i></i><i></i></div>
+      </div>
+    </div>
+
+    <div class="stats-bar">
+      <div class="sb-item"><div class="sv" id="stFaq">—</div><div class="sk">知识库问答</div></div>
+      <div class="sb-item"><div class="sv" id="stChats">—</div><div class="sk">累计会话</div></div>
+      <div class="sb-item"><div class="sv" id="stUsers">—</div><div class="sk">注册用户</div></div>
+      <div class="sb-item"><div class="sv" id="stLlm">—</div><div class="sk">LLM 调用</div></div>
+    </div>
+    <div class="hero-foot">技术栈：<b>FastAPI</b> · <b>LangGraph</b> · <b>SSE 流式</b> · <b>bge-m3 语义检索</b> · <b>Qwen3</b></div>
+  </section>
+
+  <!-- 右：登录（功能原样，配色对齐） -->
+  <section class="auth">
+    <div class="adot a1"></div><div class="adot a2"></div>
+    <div class="box">
+      <h2>欢迎登录</h2>
+      <div class="sub">登录后才能进入对话工作台，历史记录跟随账号保存</div>
+
+      <div class="announce">📢 <span>演示公告：验证码直接回显不发真实短信；支持上传文档扩充知识库，上传后立即生效。</span></div>
+      <div class="srvline">
+        <span class="st"><span class="sdot"></span>LLM 服务在线</span>
+        <span class="st"><span class="sdot"></span>知识库 <b id="srvFaq">—</b> 条</span>
+        <span class="st"><span class="sdot"></span>知识块 <b id="srvKb">—</b> 个</span>
+      </div>
+
+      <div class="tabs" id="tabs">
+        <button data-tab="phone" class="on">📱 手机号</button>
+        <button data-tab="wx">💬 微信</button>
+        <button data-tab="ali">💙 支付宝</button>
+      </div>
+
+      <!-- 手机验证码 -->
+      <div class="pane on" id="pane-phone">
+        <div class="field"><label>手机号</label>
+          <div class="ctl" id="phoneCtl"><span class="pre">📱</span><input id="phone" type="tel" maxlength="11" placeholder="11 位手机号" /></div>
+          <div class="err" id="phoneErr"></div>
+        </div>
+        <div class="field"><label>短信验证码</label>
+          <div class="ctl codectl"><span class="pre">✉️</span>
+            <input id="code" inputmode="numeric" maxlength="6" placeholder="6 位验证码" />
+            <button class="codebtn" id="codeBtn">获取验证码</button>
+          </div>
+        </div>
+        <button class="btn" id="loginBtn">登 录</button>
+        <div class="codehint" id="codeHint"></div>
+        <div class="meta-tip">演示环境不发真实短信，验证码会直接显示在下方提示框</div>
+      </div>
+
+      <!-- 微信扫码 -->
+      <div class="pane" id="pane-wx">
+        <div class="qrwrap">
+          <div class="qrbox">
+            <canvas id="cv-wx" width="192" height="192"></canvas>
+            <div class="qrbrand wxmark">💬</div>
+            <div class="scanline" id="scan-wx"></div>
+            <div class="qrmask" id="mask-wx"><div class="big">✅</div><div id="masktx-wx">扫码成功</div>
+              <button id="renew-wx">重新获取</button></div>
+          </div>
+          <div class="qrtip">请使用<span class="wxmark">微信</span>扫描二维码登录<br/>演示模式：点击右侧按钮模拟手机扫码</div>
+          <div class="qracts">
+            <button class="qrefresh" id="refresh-wx">↻ 刷新二维码</button>
+            <button class="qsim" id="sim-wx">📱 模拟扫码成功</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 支付宝扫码 -->
+      <div class="pane" id="pane-ali">
+        <div class="qrwrap">
+          <div class="qrbox">
+            <canvas id="cv-ali" width="192" height="192"></canvas>
+            <div class="qrbrand alimark">💙</div>
+            <div class="scanline" id="scan-ali"></div>
+            <div class="qrmask" id="mask-ali"><div class="big">✅</div><div id="masktx-ali">扫码成功</div>
+              <button id="renew-ali">重新获取</button></div>
+          </div>
+          <div class="qrtip">请使用<span class="alimark">支付宝</span>扫描二维码登录<br/>演示模式：点击右侧按钮模拟手机扫码</div>
+          <div class="qracts">
+            <button class="qrefresh" id="refresh-ali">↻ 刷新二维码</button>
+            <button class="qsim" id="sim-ali">📱 模拟扫码成功</button>
+          </div>
+        </div>
+      </div>
+
+      <label class="agree">
+        <input type="checkbox" id="agree" checked />
+        <span class="abox">✓</span>
+        <span class="atx">我已阅读并同意 <a id="lnkUser">《用户协议》</a> 与 <a id="lnkPrivacy">《隐私政策》</a>，并授权使用本服务完成注册 / 登录。</span>
+      </label>
+
+      <button class="ghostbtn" id="guestBtn">👀 不想登录？游客身份直接体验完整功能</button>
+      <div class="meta-tip">游客数据保存在当前浏览器；手机号 / 扫码登录后长期保存</div>
+    </div>
+  </section>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="legal" id="legalModal">
+  <div class="lcard">
+    <h3 id="legalTitle"></h3>
+    <div class="lbody" id="legalBody"></div>
+    <button class="lclose" id="legalClose">我已知晓，继续</button>
+  </div>
+</div>
+
+<!-- 功能介绍弹层（点左侧胶囊打开） -->
+<div class="feat-modal" id="featModal">
+  <div class="feat-card">
+    <div class="feat-head">
+      <div class="feat-badge" id="ftIcon">🤖</div>
+      <div><h3 id="ftTitle"></h3><div class="fsub" id="ftSub"></div></div>
+    </div>
+    <p class="feat-desc" id="ftDesc"></p>
+    <div class="feat-tags" id="ftTags"></div>
+    <div class="feat-demo"><div class="fdt">EXAMPLE · 功能示例</div><div id="ftDemo" style="display:flex;flex-direction:column;gap:8px"></div></div>
+    <button class="feat-close" id="featClose">我知道了，去登录体验</button>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2600);}
+
+/* 每次进入都必须先登录（用户明确要求）：不再自动跳过登录页。
+   顺手清掉历史版本残留在 localStorage 里的旧登录态 */
+['cs_token','cs_user','cs_display','cs_auth_ver'].forEach(k=>localStorage.removeItem(k));
+
+/* ---------------- 会话 ---------------- */
+function saveSession(d){
+  // 登录态只存 sessionStorage：关掉标签页即失效，下次打开必须重新登录
+  sessionStorage.setItem('cs_auth_ver', 'v8');
+  sessionStorage.setItem('cs_token', d.token);
+  sessionStorage.setItem('cs_user', d.user ? d.user.username : d.username);
+  sessionStorage.setItem('cs_display', d.user ? (d.user.display_name || d.user.username) : (d.display_name || d.username));
+  const who = d.user ? (d.user.display_name || d.user.username) : d.username;
+  toast('欢迎，'+who+'！正在进入…');
+  // 服务端已在登录响应里种下 HttpOnly cookie，这里跳主页即可（/ 由服务端门禁放行）
+  setTimeout(()=>location.href='/', 500);
+}
+
+/* ---------------- Tab 切换 ---------------- */
+let activeTab = 'phone';
+document.querySelectorAll('#tabs button').forEach(b=>{
+  b.onclick=()=>{
+    activeTab = b.dataset.tab;
+    document.querySelectorAll('#tabs button').forEach(x=>x.classList.toggle('on',x===b));
+    ['phone','wx','ali'].forEach(t=>$('pane-'+t).classList.toggle('on',t===activeTab));
+    stopPolling();
+    if(activeTab==='wx') startScan('wx');
+    if(activeTab==='ali') startScan('ali');
+  };
+});
+
+/* ---------------- 手机验证码 ---------------- */
+function phoneValid(){ return /^1[3-9]\d{9}$/.test($('phone').value.trim()); }
+function showPhoneErr(msg){
+  const err=$('phoneErr');
+  err.textContent=msg; err.classList.add('show');
+  const ctl=$('phoneCtl');
+  ctl.classList.remove('shake'); void ctl.offsetWidth; ctl.classList.add('shake');
+}
+/* 实时校验：边输入边提示，格式对自动消除 */
+$('phone').addEventListener('input', ()=>{
+  const v=$('phone').value.trim(), err=$('phoneErr');
+  if(!v){ err.classList.remove('show'); return; }
+  if(phoneValid()){ err.classList.remove('show'); return; }
+  if(!/^\d*$/.test(v)){
+    err.textContent='手机号只能包含数字';
+  }else if(v.length<11){
+    err.textContent=`手机号格式不对：应为 11 位数字（1 开头），当前 ${v.length} 位，还差 ${11-v.length} 位`;
+  }else{
+    err.textContent='手机号格式不对：需以 1 开头（13x-19x 号段）';
+  }
+  err.classList.add('show');
+});
+
+let cdTimer=null;
+$('codeBtn').onclick=async ()=>{
+  if(!phoneValid()){
+    const v=$('phone').value.trim();
+    showPhoneErr(!/^\d+$/.test(v) ? '手机号只能包含数字' : `手机号格式不对：应为 11 位数字，当前 ${v.length} 位`);
+    toast('手机号格式不对，请检查后重试');
+    return;
+  }
+  $('phoneErr').classList.remove('show');
+  const phone=$('phone').value.trim();
+  $('codeBtn').disabled=true;
+  try{
+    const r=await fetch('/api/auth/send-code',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone})});
+    const d=await r.json();
+    if(!r.ok) throw new Error(d.detail||'发送失败');
+    const hint=$('codeHint');
+    hint.innerHTML='📬 演示验证码：<b style="font-size:16px;letter-spacing:3px">'+d.demo_code+'</b>（已自动填入）';
+    hint.classList.add('show');
+    $('code').value=d.demo_code;
+    toast('验证码已发送');
+    let n=60; $('codeBtn').textContent=n+'s 后重发';
+    cdTimer=setInterval(()=>{ n--; if(n<=0){clearInterval(cdTimer);$('codeBtn').disabled=false;$('codeBtn').textContent='获取验证码';}
+      else $('codeBtn').textContent=n+'s 后重发'; },1000);
+  }catch(e){ toast(e.message); $('codeBtn').disabled=false; }
+};
+/* ---------------- 用户协议勾选 ---------------- */
+const LEGAL_TEXTS={
+  user:{title:'用户协议',body:'欢迎使用电商小二 · 智能客服（下称"本服务"）。\n\n1. 本服务为演示环境，用于产品功能展示与体验，请勿输入真实敏感信息（身份证、银行卡、真实订单号等）。\n\n2. 您通过手机号 / 扫码 / 游客方式登录后产生的会话记录、上传的图片，仅用于提供本次客服对话与运营统计，演示环境不做对外共享。\n\n3. 您承诺不利用本服务从事违法违规活动；对发布内容承担责任。\n\n4. 本服务按"现状"提供，功能与数据可能随演示调整、重置，恕不另行通知。\n\n5. 继续注册 / 登录即视为您已阅读并同意本协议。'},
+  privacy:{title:'隐私政策',body:'我们非常重视您的隐私。\n\n1. 收集内容：手机号（仅用于创建账号与登录校验）、会话消息、图片、昵称与偏好等您主动提供的信息。\n\n2. 使用范围：仅用于提供智能问答、订单 / 物流演示查询、会话记忆与服务质量统计（如满意度评价）。\n\n3. 存储与保护：数据传输采用 HTTPS 加密；演示环境数据仅存储于本服务内，不与第三方共享，不做广告用途。\n\n4. 您的权利：可随时要求删除账号与相关数据；游客模式数据仅保存在当前浏览器。\n\n5. 政策更新：如有重大变更将在登录页公示。\n\n继续注册 / 登录即表示您已阅读并同意上述内容。'}
+};
+function requireAgree(){
+  if($('agree').checked) return true;
+  toast('请先阅读并勾选同意《用户协议》与《隐私政策》');
+  return false;
+}
+$('lnkUser').onclick=e=>{e.preventDefault();e.stopPropagation();showLegal('user');};
+$('lnkPrivacy').onclick=e=>{e.preventDefault();e.stopPropagation();showLegal('privacy');};
+function showLegal(k){
+  $('legalTitle').textContent=LEGAL_TEXTS[k].title;
+  $('legalBody').textContent=LEGAL_TEXTS[k].body;
+  $('legalModal').classList.add('show');
+}
+$('legalClose').onclick=()=>$('legalModal').classList.remove('show');
+$('legalModal').onclick=e=>{ if(e.target===$('legalModal')) $('legalModal').classList.remove('show'); };
+
+$('loginBtn').onclick=async ()=>{
+  if(!requireAgree()) return;
+  if(!phoneValid()){
+    const v=$('phone').value.trim();
+    showPhoneErr(!/^\d+$/.test(v) ? '手机号只能包含数字' : `手机号格式不对：应为 11 位数字，当前 ${v.length} 位`);
+    toast('手机号格式不对，请检查后重试');
+    return;
+  }
+  const phone=$('phone').value.trim(), code=$('code').value.trim();
+  if(!/^\d{6}$/.test(code)){ toast('请输入 6 位验证码'); return; }
+  $('loginBtn').disabled=true;
+  try{
+    const r=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone,code})});
+    const d=await r.json();
+    if(!r.ok) throw new Error(d.detail||'登录失败');
+    saveSession(d);
+  }catch(e){ toast(e.message); $('loginBtn').disabled=false; }
+};
+
+/* ---------------- 仿真二维码绘制（演示用，非真码） ---------------- */
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}}
+function drawQR(cv, seedStr){
+  let seed=0; for(const ch of seedStr) seed=(seed*31+ch.charCodeAt(0))|0;
+  const rnd=mulberry32(seed), ctx=cv.getContext('2d'), N=25, S=cv.width/N;
+  ctx.fillStyle='#fff'; ctx.fillRect(0,0,cv.width,cv.height);
+  ctx.fillStyle='#000';
+  for(let y=0;y<N;y++)for(let x=0;x<N;x++){
+    const inFinder=(x<8&&y<8)||(x>=N-8&&y<8)||(x<8&&y>=N-8);
+    if(!inFinder && rnd()<0.44) ctx.fillRect(x*S,y*S,S*0.92,S*0.92);
+  }
+  function finder(fx,fy){
+    ctx.fillStyle='#000'; ctx.fillRect(fx*S,fy*S,7*S,7*S);
+    ctx.fillStyle='#fff'; ctx.fillRect((fx+1)*S,(fy+1)*S,5*S,5*S);
+    ctx.fillStyle='#000'; ctx.fillRect((fx+2)*S,(fy+2)*S,3*S,3*S);
+  }
+  finder(0,0); finder(N-7,0); finder(0,N-7);
+}
+
+/* ---------------- 扫码流程 ---------------- */
+const pollTimers={}, tickets={};
+function stopPolling(){
+  Object.values(pollTimers).forEach(clearInterval);
+  ['wx','ali'].forEach(p=>{ delete pollTimers[p]; const m=$('mask-'+p); if(m&&!m.classList.contains('show')){/*keep*/} });
+}
+function maskOn(p,tx){ $('scan-'+p).style.display='none'; $('masktx-'+p).textContent=tx||'扫码成功'; $('mask-'+p).classList.add('show'); }
+function maskOff(p){ $('scan-'+p).style.display=''; $('mask-'+p).classList.remove('show'); }
+
+async function startScan(p){
+  stopOne(p); maskOff(p);
+  try{
+    const r=await fetch('/api/auth/'+p+'/qrcode');
+    const d=await r.json();
+    if(!r.ok) throw new Error(d.detail||'获取二维码失败');
+    tickets[p]=d.ticket;
+    drawQR($('cv-'+p), d.ticket);
+    pollTimers[p]=setInterval(()=>pollStatus(p), 1500);
+  }catch(e){ toast(e.message); }
+}
+function stopOne(p){ if(pollTimers[p]){clearInterval(pollTimers[p]); delete pollTimers[p];} }
+
+async function pollStatus(p){
+  const ticket=tickets[p]; if(!ticket) return;
+  try{
+    const r=await fetch('/api/auth/'+p+'/status?ticket='+encodeURIComponent(ticket));
+    if(r.status===410){ stopOne(p); maskOn(p,'二维码已过期，请刷新'); return; }
+    if(!r.ok) return;
+    const d=await r.json();
+    if(d.status==='confirmed' && d.token){
+      stopOne(p); maskOn(p,'登录成功 ✅');
+      saveSession(d);
+    }
+  }catch(e){ /* 网络抖动忽略，下轮继续 */ }
+}
+
+async function simulateScan(p){
+  const ticket=tickets[p];
+  if(!ticket){ toast('二维码尚未就绪，请稍候'); return; }
+  try{
+    const r=await fetch('/api/auth/'+p+'/confirm',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ticket})});
+    if(!r.ok){ const d=await r.json(); throw new Error(d.detail||'模拟扫码失败'); }
+  }catch(e){ toast(e.message); }
+}
+
+['wx','ali'].forEach(p=>{
+  $('refresh-'+p).onclick=()=>startScan(p);
+  $('renew-'+p).onclick=()=>startScan(p);
+  $('sim-'+p).onclick=()=>simulateScan(p);
+});
+
+/* ---------------- 游客 ---------------- */
+$('guestBtn').onclick=()=>{
+  if(!requireAgree()) return;
+  $('guestBtn').disabled=true;$('guestBtn').textContent='⏳ 正在创建游客身份…';
+  fetch('/api/auth/guest',{method:'POST'})
+    .then(r=>r.json())
+    .then(d=>{ if(!d.ok) throw new Error(d.detail||'创建失败'); saveSession(d); })
+    .catch(e=>{ toast(e.message); $('guestBtn').disabled=false;$('guestBtn').textContent='👀 不想登录？游客身份直接体验完整功能'; });
+};
+$('code').addEventListener('keydown',e=>{ if(e.key==='Enter') $('loginBtn').click(); });
+
+/* ---------------- 登录页增强：真实服务数据（/api/auth/public-info） ---------------- */
+(async ()=>{
+  const set=(id,v)=>{const el=$(id); if(el) el.textContent=v;};
+  try{
+    const r=await fetch('/api/auth/public-info');
+    const d=await r.json();
+    set('stFaq', d.faq); set('stChats', d.chats); set('stUsers', d.users); set('stLlm', d.llm_calls);
+    set('srvFaq', d.faq); set('srvKb', d.kb);
+  }catch(e){ /* 数据条保持 —，不影响登录 */ }
+})();
+
+/* ---------------- 实时对话演示（打字机轮播） ---------------- */
+const DEMO_DIALOGS=[
+  {q:'退货怎么办？', a:'签收后 7 天内支持无理由退货，质量问题 15 天内可退，运费商家承担哦～'},
+  {q:'帮我查下物流', a:'好的，请提供订单号，我马上为您查询配送进度 🚚'},
+  {q:'有什么耳机推荐？', a:'这款无线降噪耳机正在促销，价格实惠库存充足，要看看商品卡片吗？'},
+  {q:'叫我土豆', a:'记住啦，土豆！下次对话我也会这样称呼您 😊'}
+];
+(function playDemo(){
+  const qEl=$('dmQ'), aEl=$('dmA');
+  if(!qEl||!aEl) return;
+  let idx=0;
+  function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+  async function run(){
+    const d=DEMO_DIALOGS[idx%DEMO_DIALOGS.length]; idx++;
+    qEl.textContent=''; aEl.textContent='';
+    // 用户气泡：直接弹出
+    for(const ch of d.q){ qEl.textContent+=ch; await sleep(55); }
+    await sleep(500);
+    // 客服气泡：打字机 + 光标
+    const cur=document.createElement('span'); cur.className='tc';
+    aEl.appendChild(cur);
+    for(const ch of d.a){
+      cur.insertAdjacentText('beforebegin', ch);
+      await sleep(38);
+    }
+    cur.remove();
+    await sleep(2600);
+    run();
+  }
+  run();
+})();
+
+/* ---------------- 功能介绍弹层（点胶囊打开） ---------------- */
+const FEATURES={
+  ans:{
+    icon:'🤖', title:'智能应答', sub:'三轨路由 · 语义检索 · 秒级响应',
+    desc:'用户消息先经过<b>意图识别</b>，再路由到三条轨道：任务轨办业务、知识轨答咨询、闲聊轨唠家常。FAQ 知识库支持关键词命中 + <b>bge-m3 语义向量检索</b>兜底（相似度 ≥0.50），管理后台在线增删改，改完即时生效。',
+    tags:['三轨智能路由','bge-m3 语义检索','FAQ 在线管理','SSE 流式输出','📚 来源标注'],
+    demo:[
+      {t:'q',x:'退货怎么办？'},
+      {t:'a',x:'签收后 7 天内支持无理由退货，质量问题 15 天内可退，运费商家承担哦～\n📚 来源：FAQ《退换货政策》'}
+    ]
+  },
+  flow:{
+    icon:'🧾', title:'工单流转', sub:'槽位填充 · 进度条 · 随时打断',
+    desc:'多轮任务办理：退款申请自动收集<b>订单号、退款原因</b>（槽位填充），顶部 4 步进度条随对话实时点亮；中途可随时「➕新话题」打断换任务，状态不串味；连发两句不满自动<b>情绪检测</b>并引导转人工。',
+    tags:['退款 4 步流程','查订单 / 物流','槽位填充','情绪检测关怀','转人工'],
+    demo:[
+      {t:'q',x:'我要退款'},
+      {t:'a',x:'好的，请提供订单号（如 DD2024001），我马上为您办理（步骤 2/4）'},
+      {t:'q',x:'DD2024001，不想要了'},
+      {t:'a',x:'✅ 退款申请已提交，进度条已点亮，请留意到账通知～'}
+    ]
+  },
+  insight:{
+    icon:'📊', title:'客户洞察', sub:'运营看板 · LLM 追踪 · 坏例复核',
+    desc:'登录后进入「运营看板」：5 项 KPI（累计评价 / 👍👎 / 点踩率 / 平均响应时长）、评价趋势双轴折线图、用户问题<b>词云</b>、<b>LLM 调用追踪</b>（mini-Langfuse：链路 / 模型 / 耗时 / 成败）、坏例复核队列——点踩的对话进队列，补一条 FAQ 立即生效。',
+    tags:['5 项 KPI','评价趋势图','问题词云','LLM 调用追踪','坏例复核闭环'],
+    demo:[
+      {t:'q',x:'📊 运营看板能看到什么？'},
+      {t:'kpis',x:[['9 条','知识库问答'],['13 次','累计会话'],['8 次','LLM 调用']]}
+    ]
+  }
+};
+function openFeat(key){
+  const f=FEATURES[key]; if(!f) return;
+  $('ftIcon').textContent=f.icon;
+  $('ftTitle').textContent=f.title;
+  $('ftSub').textContent=f.sub;
+  $('ftDesc').innerHTML=f.desc;
+  $('ftTags').innerHTML=f.tags.map(t=>'<span>'+t+'</span>').join('');
+  $('ftDemo').innerHTML=f.demo.map(m=>{
+    if(m.t==='kpis'){
+      return '<div class="fm kpis">'+m.x.map(k=>'<div><div class="kv">'+k[0]+'</div><div class="kk">'+k[1]+'</div></div>').join('')+'</div>';
+    }
+    return '<div class="fm '+m.t+'">'+m.x.replace(/\n/g,'<br/>')+'</div>';
+  }).join('');
+  $('featModal').classList.add('show');
+}
+document.querySelectorAll('.bp-pills span[data-feat]').forEach(el=>{
+  el.onclick=()=>openFeat(el.dataset.feat);
+});
+$('featClose').onclick=()=>$('featModal').classList.remove('show');
+$('featModal').onclick=e=>{ if(e.target===$('featModal')) $('featModal').classList.remove('show'); };
+</script>
+</body>
+</html>
