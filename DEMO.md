@@ -1,6 +1,6 @@
 # 🎬 电商小二 · 5 分钟演示脚本
 
-> 演示地址：https://question-self-check.app.workbuddy.host/
+> 演示地址：https://dianshang-xiaoer-cs-36988.app.workbuddy.host/
 > 全程按顺序操作，每一步都有"看点"，适合录屏或现场演示。
 
 ---

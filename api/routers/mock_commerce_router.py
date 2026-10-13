@@ -30,6 +30,16 @@ PRODUCTS = {
         "price": 45.0, "stock": 0, "status": "缺货中，预计 3 天后补货",
         "tags": ["食品级材质", "便携提绳"],
     },
+    "SKU004": {
+        "product_id": "SKU004", "title": "无线蓝牙耳机 Air Pro 2",
+        "price": 399.0, "stock": 128, "status": "在售",
+        "tags": ["耳机", "蓝牙耳机", "主动降噪", "续航 30 小时", "七天无理由退货"],
+    },
+    "SKU005": {
+        "product_id": "SKU005", "title": "头戴式降噪耳机 Studio Max",
+        "price": 1299.0, "stock": 34, "status": "在售",
+        "tags": ["耳机", "头戴式", "降噪", "HiFi 音质", "顺丰包邮"],
+    },
 }
 
 ORDERS = {

@@ -4,7 +4,7 @@
 
 ![Python](https://img.shields.io/badge/Python-3.11+-blue) ![FastAPI](https://img.shields.io/badge/FastAPI-0.1xx-009688) ![LangGraph](https://img.shields.io/badge/LangChain-LLM%20Orchestration-orange) ![License](https://img.shields.io/badge/License-MIT-green)
 
-**在线演示**：https://question-self-check.app.workbuddy.host/
+**在线演示**：https://dianshang-xiaoer-cs-36988.app.workbuddy.host/
 
 ---
 
@@ -87,10 +87,11 @@ uv sync
 # 2. 配置 .env（项目根目录）
 cat > .env << 'EOF'
 LLM_API_KEY=sk-你的SiliconFlow密钥
-LLM_MODEL=Qwen/Qwen3-8B
+LLM_MODEL=Qwen/Qwen3.8-27B
 LLM_BASE_URL=https://api.siliconflow.cn/v1
 DATABASE_URL=sqlite+aiosqlite:///customer_service.db
-COMMERCE_API_BASE_URL=http://127.0.0.1:8000/api/v1/mock
+# 单服务版：商城 mock 由本应用自身提供，填本服务地址（端口与下方 APP_PORT 一致）
+COMMERCE_API_BASE_URL=http://127.0.0.1:18082
 APP_HOST=0.0.0.0
 APP_PORT=18082
 ADMIN_PASSWORD=改成你的管理密码
