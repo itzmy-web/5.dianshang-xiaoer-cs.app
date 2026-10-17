@@ -4,7 +4,7 @@
 
 ![Python](https://img.shields.io/badge/Python-3.11+-blue) ![FastAPI](https://img.shields.io/badge/FastAPI-0.1xx-009688) ![LangGraph](https://img.shields.io/badge/LangChain-LLM%20Orchestration-orange) ![License](https://img.shields.io/badge/License-MIT-green)
 
-**在线演示**：https://dianshang-xiaoer-cs-36988.app.workbuddy.host/
+**在线演示**：http://39.107.107.246:8083/
 
 ---
 
