@@ -1,7 +1,7 @@
 [project]
 name = "customer-service-backend"
 version = "1.0"
-description = "电商小二"
+description = "商擎助理"
 requires-python = ">=3.12"
 dependencies = [
     "aiosqlite>=0.22.1",

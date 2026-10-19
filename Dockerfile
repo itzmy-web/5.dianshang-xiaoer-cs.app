@@ -1,4 +1,4 @@
-# 电商小二 · 智能客服（SQLite 单容器版）
+# 商擎助理 · 智能客服（SQLite 单容器版）
 FROM python:3.12-slim
 
 ENV PYTHONUNBUFFERED=1 \

@@ -92,7 +92,7 @@ async def lifespan(app: FastAPI):
     print("服务器已关闭")
 
 # 创建应用
-app = FastAPI(description="电商小二智能客服应用", lifespan=lifespan)
+app = FastAPI(description="商擎助理智能客服应用", lifespan=lifespan)
 
 
 # ---------------- 数字人（魔珐星云）凭证下发 ----------------

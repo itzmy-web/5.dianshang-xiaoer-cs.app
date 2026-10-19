@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<meta name="description" content="电商小二：7×24 AI 智能客服，查订单、办退款、找商品，支持语音朗读与图片识别。" />
-<meta property="og:title" content="电商小二 · AI 智能客服" />
+<meta name="description" content="商擎助理：7×24 AI 智能客服，查订单、办退款、找商品，支持语音朗读与图片识别。" />
+<meta property="og:title" content="商擎助理 · AI 智能客服" />
 <meta property="og:description" content="查订单 / 办退款 / 找商品 / 智能问答，一条对话全办完。" />
-<title>电商小二 · 智能客服</title>
+<title>商擎助理 · 智能客服</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛍️</text></svg>">
 <style>
   :root{
@@ -286,7 +286,7 @@
   <aside class="sidenav">
     <div class="brand">
       <div class="blogo">🛍️</div>
-      <div class="bt"><b>电商小二</b><span>SMART SERVICE</span></div>
+      <div class="bt"><b>商擎助理</b><span>SMART SERVICE</span></div>
     </div>
     <div class="item on" id="navChat"><span class="ic">💬</span>对话工作台</div>
     <div class="item" id="navSessions"><span class="ic">🕘</span>历史会话</div>
@@ -521,7 +521,7 @@ let unread=0;
 function flashTitle(){
   if(!document.hidden) return;
   unread++;
-  document.title=`【${unread} 条新回复】电商小二`;
+  document.title=`【${unread} 条新回复】商擎助理`;
 }
 window.addEventListener('focus',()=>{unread=0;document.title=BASE_TITLE;});
 
@@ -631,7 +631,7 @@ function finishBot(shell, text, elapsedMs){
 function addWelcome(){
   const div=document.createElement('div'); div.className='msg bot';
   div.innerHTML=`<div class="av">🛍️</div><div class="body">
-    <div class="bubble">你好，我是电商小二 👋 查订单、办退款、找商品、看政策，一句话的事。先从这里开始？</div>
+    <div class="bubble">你好，我是商擎助理 👋 查订单、办退款、找商品、看政策，一句话的事。先从这里开始？</div>
     <div class="welcome">
       <button data-q="我的订单DD2024001到哪了？">📦 查订单物流</button>
       <button data-q="我要退款">💸 办理退款</button>
@@ -1201,11 +1201,11 @@ $('exportBtn2').onclick=()=>{
     const t=div.querySelector('.bubble');
     return (isUser?'【我】':'【客服小二】')+' '+(t?t.textContent:'（卡片消息）');
   });
-  const head='电商小二 · 对话记录导出\n导出时间：'+new Date().toLocaleString()+'\n'+'—'.repeat(24)+'\n\n';
+  const head='商擎助理 · 对话记录导出\n导出时间：'+new Date().toLocaleString()+'\n'+'—'.repeat(24)+'\n\n';
   const blob=new Blob([head+rows.join('\n\n')],{type:'text/plain;charset=utf-8'});
   const a=document.createElement('a');
   a.href=URL.createObjectURL(blob);
-  a.download='电商小二-对话记录-'+new Date().toISOString().slice(0,10)+'.txt';
+  a.download='商擎助理-对话记录-'+new Date().toISOString().slice(0,10)+'.txt';
   a.click(); toast('已导出对话记录 📤');
 };
 /* 浏览器 TTS：包装 speakToggle 行为 */
