@@ -28,7 +28,7 @@ async def image_chat(req: ImageChatRequest):
         raise HTTPException(status_code=400, detail="图片太大，请换一张小一些的")
 
     # 2. 组装多模态消息（OpenAI 兼容格式，SiliconFlow 直接支持）
-    prompt = "你是电商客服小二。用户发来一张图片，请先简述你在图片里看到了什么，再结合电商客服场景给出帮助建议。"
+    prompt = "你是商擎助理。用户发来一张图片，请先简述你在图片里看到了什么，再结合电商客服场景给出帮助建议。"
     if req.caption:
         prompt += f"\n用户补充说明：{req.caption}"
     payload = {

@@ -78,7 +78,7 @@ class DialogueService:
                 return await self._canned_turn(
                     dialogue_state, user_message,
                     [BotMessage(text="已为您转接人工客服，当前排队第 1 位，预计等待 30 秒 ⏳"),
-                     BotMessage(text="（演示环境：人工坐席由 AI 小二继续顶班，有什么问题请直接说～）")],
+                     BotMessage(text="（演示环境：人工坐席由 AI 商擎助理继续顶班，有什么问题请直接说～）")],
                 )
 
             # ② 告别小结：「没了/谢谢/拜拜」→ 自动总结本次对话，引导评价
@@ -118,7 +118,7 @@ class DialogueService:
                 dialogue_state.negative_streak = getattr(dialogue_state, "negative_streak", 0) + 1
                 if dialogue_state.negative_streak >= 2:
                     process_result.messages.append(BotMessage(
-                        text="听到你这么说，小二真的很过意不去 🙏 你的反馈我已经如实记录并优先标注了。"
+                        text="听到你这么说，商擎助理真的很过意不去 🙏 你的反馈我已经如实记录并优先标注了。"
                              "如果还是解决不了，随时说「转人工」，我们的人工坐席马上接手！"))
             else:
                 dialogue_state.negative_streak = 0
@@ -183,7 +183,7 @@ class DialogueService:
                 except Exception:
                     pass
                 msgs = [BotMessage(text="已为您转接人工客服，当前排队第 1 位，预计等待 30 秒 ⏳"),
-                        BotMessage(text="（演示环境：人工坐席由 AI 小二继续顶班，有什么问题请直接说～）")]
+                        BotMessage(text="（演示环境：人工坐席由 AI 商擎助理继续顶班，有什么问题请直接说～）")]
                 for m in msgs:
                     yield 'text', m.text; parts.append(m)
                 await self._canned_turn(dialogue_state, user_message, msgs)
@@ -226,7 +226,7 @@ class DialogueService:
         if user_message.type is MessageType.TEXT and user_message.text and _is_negative(user_message.text):
             dialogue_state.negative_streak = getattr(dialogue_state, "negative_streak", 0) + 1
             if dialogue_state.negative_streak >= 2:
-                warn = "听到你这么说，小二真的很过意不去 🙏 你的反馈我已经如实记录并优先标注了。如果还是解决不了，随时说「转人工」，我们的人工坐席马上接手！"
+                warn = "听到你这么说，商擎助理真的很过意不去 🙏 你的反馈我已经如实记录并优先标注了。如果还是解决不了，随时说「转人工」，我们的人工坐席马上接手！"
                 yield 'text', warn
         else:
             dialogue_state.negative_streak = 0

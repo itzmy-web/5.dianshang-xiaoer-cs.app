@@ -308,7 +308,7 @@
   </div>
 
   <span class="kicker">AI CUSTOMER SERVICE</span>
-  <h1>你的 <span class="g">7×24 电商客服小二</span>，已上线。</h1>
+  <h1>你的 <span class="g">7×24 商擎助理</span>，已上线。</h1>
   <p class="lead">业务办理（退款/物流/查订单）· 商品与 FAQ 知识问答 · 日常闲聊，三轨智能路由。点订单卡片可快速聚焦，每条回复都能 👍/👎 评价。</p>
 
   <div class="grid">
@@ -1199,7 +1199,7 @@ $('exportBtn2').onclick=()=>{
   const rows=[...document.querySelectorAll('#msgs .msg')].map(div=>{
     const isUser=div.className.includes('user');
     const t=div.querySelector('.bubble');
-    return (isUser?'【我】':'【客服小二】')+' '+(t?t.textContent:'（卡片消息）');
+    return (isUser?'【我】':'【商擎助理】')+' '+(t?t.textContent:'（卡片消息）');
   });
   const head='商擎助理 · 对话记录导出\n导出时间：'+new Date().toLocaleString()+'\n'+'—'.repeat(24)+'\n\n';
   const blob=new Blob([head+rows.join('\n\n')],{type:'text/plain;charset=utf-8'});

@@ -86,7 +86,7 @@
     +   '<div class="hd">🐱 小暹 · AI 客服 <small>小猫客服，在线服务</small><span class="cls" id="catClose">✕</span></div>'
     +   '<div class="msgs" id="catMsgs"></div>'
     +   '<div class="chips" id="catChips">'
-    +     '<button data-q="这个项目是干什么的？能帮我做什么？">小二能做什么？</button>'
+    +     '<button data-q="这个项目是干什么的？能帮我做什么？">商擎助理能做什么？</button>'
     +     '<button data-q="怎么申请退款？">怎么申请退款？</button>'
     +     '<button data-q="多久能发货？">多久能发货？</button>'
     +     '<button data-q="怎么转人工？">怎么转人工？</button>'
